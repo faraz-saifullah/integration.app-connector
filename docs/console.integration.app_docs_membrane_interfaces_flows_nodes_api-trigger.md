@@ -1,0 +1,82 @@
+---
+url: "https://console.integration.app/docs/membrane/interfaces/flows/nodes/api-trigger"
+title: "Docs · Integration Console"
+---
+
+[Integration.app](https://integration.app/)
+
+`` `Ctrl` + `K`
+
+[NPM packages](https://www.npmjs.com/~integration.app) [GitHub organization](https://github.com/integration-app)
+
+- [External Apps](https://console.integration.app/docs/membrane/apps)
+- [Interfaces](https://console.integration.app/docs/membrane/interfaces)
+  - [Scenarios](https://console.integration.app/docs/membrane/interfaces/scenarios)
+  - [Actions](https://console.integration.app/docs/membrane/interfaces/actions)
+  - [Flows](https://console.integration.app/docs/membrane/interfaces/flows)
+    - [Nodes](https://console.integration.app/docs/membrane/interfaces/flows/nodes)
+      - [API Trigger](https://console.integration.app/docs/membrane/interfaces/flows/nodes/api-trigger)
+      - [App Event Trigger](https://console.integration.app/docs/membrane/interfaces/flows/nodes/app-event-trigger)
+      - [Create Data Link](https://console.integration.app/docs/membrane/interfaces/flows/nodes/create-data-link)
+      - [Create Data Record](https://console.integration.app/docs/membrane/interfaces/flows/nodes/create-data-record)
+      - [Data Record Created Trigger](https://console.integration.app/docs/membrane/interfaces/flows/nodes/data-record-created-trigger)
+      - [Data Record Deleted Trigger](https://console.integration.app/docs/membrane/interfaces/flows/nodes/data-record-deleted-trigger)
+      - [Data Record Updated Trigger](https://console.integration.app/docs/membrane/interfaces/flows/nodes/data-record-updated-trigger)
+      - [Delete Data Record](https://console.integration.app/docs/membrane/interfaces/flows/nodes/delete-data-record)
+      - [Filter](https://console.integration.app/docs/membrane/interfaces/flows/nodes/filter)
+      - [Find Data Link](https://console.integration.app/docs/membrane/interfaces/flows/nodes/find-data-link)
+      - [Find Data Record By Id](https://console.integration.app/docs/membrane/interfaces/flows/nodes/find-data-record-by-id)
+      - [For Each](https://console.integration.app/docs/membrane/interfaces/flows/nodes/for-each)
+      - [HTTP Request](https://console.integration.app/docs/membrane/interfaces/flows/nodes/http-request)
+      - [List Data Records](https://console.integration.app/docs/membrane/interfaces/flows/nodes/list-data-records)
+      - [Schedule Trigger](https://console.integration.app/docs/membrane/interfaces/flows/nodes/schedule-trigger)
+      - [Transform Data](https://console.integration.app/docs/membrane/interfaces/flows/nodes/transform-data)
+      - [Update Data Record](https://console.integration.app/docs/membrane/interfaces/flows/nodes/update-data-record)
+  - [Data Sources](https://console.integration.app/docs/membrane/interfaces/data-sources)
+  - [Field Mappings](https://console.integration.app/docs/membrane/interfaces/field-mappings)
+  - [Data Links](https://console.integration.app/docs/membrane/interfaces/data-links)
+  - [Connecting Your App API](https://console.integration.app/docs/membrane/interfaces/internal-api)
+  - [Internal Events](https://console.integration.app/docs/membrane/interfaces/internal-events)
+  - [Internal Data Schemas](https://console.integration.app/docs/membrane/interfaces/internal-data-schemas)
+  - [Api Operations](https://console.integration.app/docs/membrane/interfaces/api-operations)
+  - [Data Collections](https://console.integration.app/docs/membrane/interfaces/data-collections)
+  - [API Proxy](https://console.integration.app/docs/membrane/interfaces/api-proxy)
+  - [Files](https://console.integration.app/docs/membrane/interfaces/files)
+  - [Running Custom Code](https://console.integration.app/docs/membrane/interfaces/custom-code)
+- [Customers](https://console.integration.app/docs/membrane/customers)
+- [Monitoring & Troubleshooting](https://console.integration.app/docs/membrane/monitoring)
+- [Security And Privacy](https://console.integration.app/docs/membrane/security-and-privacy)
+- References
+
+# API Trigger
+
+This triggers lets you launch a Flow Instance with optional input using API or SDK.
+
+You can provide an optional input schema and use it in the flow nodes as variables.
+
+To launch a Flow Instance that has API trigger, you can use the following code:
+
+Javascript
+
+[How to run it in your app](https://console.integration.app/docs/getting-started/front-end/javascript)
+
+Copy
+
+```javascript
+await integrationApp
+  .flowInstance('{FLOW_INSTANCE_ID}')
+  .run({
+
+    input: null
+  })
+```
+
+Run Now
+
+[log in](https://console.integration.app/login?returnTo=https%3A%2F%2Fconsole.integration.app%2Fdocs%2Fmembrane%2Finterfaces%2Fflows%2Fnodes%2Fapi-trigger) to run this example
+
+Integration.app is free to try. It takes just one click to get started.
+
+Login and Try it Yourself
+
+Docs · Integration Console
