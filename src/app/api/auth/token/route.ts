@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 // This is a secure server-side route that generates a JWT token for the Integration.app SDK
 export async function GET() {
@@ -8,17 +8,17 @@ export async function GET() {
     const workspaceSecret = process.env.WORKSPACE_SECRET;
 
     if (!workspaceKey || !workspaceSecret) {
-      console.error('Missing required environment variables');
+      console.error("Missing required environment variables");
       return NextResponse.json(
-        { error: 'Server configuration error' },
+        { error: "Server configuration error" },
         { status: 500 }
       );
     }
 
     // For demo purposes, we're using a static user ID and name
     // In a real app, you would get this from your authentication system
-    const userId = 'demo-user-123';
-    const userName = 'Demo User';
+    const userId = "demo-saas-customer";
+    const userName = "Demo SaaS Customer";
 
     // Create the token payload
     const payload = {
@@ -31,21 +31,17 @@ export async function GET() {
     };
 
     // Sign the token with your workspace secret
-    const token = jwt.sign(
-      payload,
-      workspaceSecret,
-      {
-        issuer: workspaceKey,
-        expiresIn: '1h', // Token expires in 1 hour
-        algorithm: 'HS256',
-      }
-    );
+    const token = jwt.sign(payload, workspaceSecret, {
+      issuer: workspaceKey,
+      expiresIn: "1h", // Token expires in 1 hour
+      algorithm: "HS256",
+    });
 
     return NextResponse.json({ token });
   } catch (error) {
-    console.error('Error generating token:', error);
+    console.error("Error generating token:", error);
     return NextResponse.json(
-      { error: 'Failed to generate authentication token' },
+      { error: "Failed to generate authentication token" },
       { status: 500 }
     );
   }
