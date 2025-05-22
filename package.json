@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@headlessui/react": "^2.2.4",
     "@integration-app/react": "^2.14.3",
     "@integration-app/sdk": "^1.11.4",
     "@tailwindcss/postcss": "^4",
