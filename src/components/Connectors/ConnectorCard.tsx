@@ -11,9 +11,9 @@ interface ConnectorCardProps {
   isConnected: boolean;
   isLoading?: boolean;
   onConnect: () => void;
-  // New props for pronouns configuration
-  isHubspot?: boolean;
-  onPronounsConfigured?: () => void;
+  // New props for field mappings
+  connectionKey?: string;
+  onFieldMappingConfigured?: () => void;
 }
 
 export default function ConnectorCard({
@@ -22,67 +22,67 @@ export default function ConnectorCard({
   icon,
   isConnected,
   onConnect,
-  isHubspot,
-  onPronounsConfigured,
+  connectionKey,
+  onFieldMappingConfigured,
 }: Readonly<ConnectorCardProps>): ReactNode {
   const integrationApp = useIntegrationApp();
-  const [isUsingPronouns, setIsUsingPronouns] = useState(false);
+  const [isUsingFieldMapping, setIsUsingFieldMapping] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
 
   useEffect(() => {
     const checkConfiguration = async () => {
-      if (!isHubspot) return;
+      if (!connectionKey) return;
       
       try {
         const instance = await integrationApp
-          .connection('hubspot')
+          .connection(connectionKey)
           .fieldMapping('pronouns')
           .get();
-        console.log('Pronouns field mapping instance:', instance);
+        console.log(`${connectionKey} field mapping instance:`, instance);
         setIsConfigured(!!instance);
       } catch (error) {
         setIsConfigured(false);
       }
     };
     checkConfiguration();
-  }, [isHubspot, integrationApp]);
+  }, [connectionKey, integrationApp]);
 
-  const handlePronounsToggle = async () => {
-    if (!isHubspot) return;
+  const handleFieldMappingToggle = async () => {
+    if (!connectionKey) return;
 
-    if (!isUsingPronouns) {
-      // User is enabling pronouns
-      setIsUsingPronouns(true);
+    if (!isUsingFieldMapping) {
+      // User is enabling field mapping
+      setIsUsingFieldMapping(true);
       setIsConfigured(false);
     } else {
-      // User is disabling pronouns
+      // User is disabling field mapping
       try {
         await integrationApp
-          .connection('hubspot')
+          .connection(connectionKey)
           .fieldMapping('pronouns')
           .archive();
-        setIsUsingPronouns(false);
+        setIsUsingFieldMapping(false);
         setIsConfigured(false);
-        if (onPronounsConfigured) {
-          onPronounsConfigured();
+        if (onFieldMappingConfigured) {
+          onFieldMappingConfigured();
         }
       } catch (error) {
-        console.error('Error disabling pronouns field mapping:', error);
+        console.error('Error disabling field mapping:', error);
       }
     }
   };
 
   const handleConfigure = async () => {
-    if (!isHubspot) return;
+    if (!connectionKey) return;
 
     try {
       await integrationApp
-        .connection('hubspot')
+        .connection(connectionKey)
         .fieldMapping('pronouns')
         .openConfiguration();
       setIsConfigured(true);
-      if (onPronounsConfigured) {
-        onPronounsConfigured();
+      if (onFieldMappingConfigured) {
+        onFieldMappingConfigured();
       }
     } catch (error) {
       console.error('Error opening field mapping configuration:', error);
@@ -90,12 +90,12 @@ export default function ConnectorCard({
   };
 
   const handleResetConfiguration = async () => {
-    if (!isHubspot) return;
+    if (!connectionKey) return;
 
     try {
       // Open the configuration again to reset it
       await integrationApp
-        .connection('hubspot')
+        .connection(connectionKey)
         .fieldMapping('pronouns')
         .openConfiguration();
     } catch (error) {
@@ -123,7 +123,7 @@ export default function ConnectorCard({
             Connected
           </span>
           
-          {isHubspot && (
+          {connectionKey && (
             <div className="w-full">
               {!isConfigured && (
                 <Button onClick={handleConfigure} className="mt-2">

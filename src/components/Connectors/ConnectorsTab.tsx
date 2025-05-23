@@ -83,8 +83,8 @@ export default function ConnectorsTab() {
                 icon={connector.icon}
                 isConnected={connectedConnectors.includes(connector.id)}
                 onConnect={() => handleConnect(connector.id)}
-                isHubspot={connector.id === "hubspot"}
-                onPronounsConfigured={connector.id === "hubspot" ? handlePronounsConfigured : undefined}
+                connectionKey={connector.id}
+                onFieldMappingConfigured={connector.id === "hubspot" ? handlePronounsConfigured : undefined}
               />
             ))}
           </div>
