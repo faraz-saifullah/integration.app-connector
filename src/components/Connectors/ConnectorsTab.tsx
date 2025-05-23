@@ -60,6 +60,12 @@ export default function ConnectorsTab() {
     }
   };
 
+  const handlePronounsConfigured = () => {
+    // You might want to trigger a re-fetch of the connections or update any related state
+    // This callback will be called whenever the pronouns field mapping is configured
+    console.log("Pronouns field mapping configured");
+  };
+
   return (
     <>
       {connectionsLoading ? (
@@ -77,6 +83,8 @@ export default function ConnectorsTab() {
                 icon={connector.icon}
                 isConnected={connectedConnectors.includes(connector.id)}
                 onConnect={() => handleConnect(connector.id)}
+                isHubspot={connector.id === "hubspot"}
+                onPronounsConfigured={connector.id === "hubspot" ? handlePronounsConfigured : undefined}
               />
             ))}
           </div>
