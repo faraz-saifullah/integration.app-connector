@@ -1,11 +1,19 @@
 "use client";
 
+import { useState } from 'react';
 import { Tabs, Tab } from '@/components/Common/Tabs';
 import UserInfoTab from '@/components/User/UserInfoTab';
 import ContactsTab from '@/components/Contacts/ContactsTab';
 import ConnectorsTab from '@/components/Connectors/ConnectorsTab';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState(0);
+
+  const handleTabChange = (index: number) => {
+    setActiveTab(index);
+    console.log('Tab changed to:', index);
+  };
+
   return (
     <div className="min-h-screen text-gray-900 bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -15,7 +23,10 @@ export default function Home() {
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <Tabs defaultActiveTab={2}>
+          <Tabs 
+            defaultActiveTab={activeTab}
+            onTabChange={handleTabChange}
+          >
             <Tab label="User Information">
               <UserInfoTab />
             </Tab>

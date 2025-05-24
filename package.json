@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "@types/jsonwebtoken": "^9.0.9",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.511.0",

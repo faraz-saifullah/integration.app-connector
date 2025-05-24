@@ -5,6 +5,9 @@ import { useEffect } from "react";
 import { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'text';
+type ButtonSize = 'small' | 'medium' | 'large';
+
 interface ConnectorCardProps {
   name: string;
   description: string;
@@ -12,7 +15,6 @@ interface ConnectorCardProps {
   isConnected: boolean;
   isLoading?: boolean;
   onConnect: () => void;
-  // New props for field mappings
   connectionKey?: string;
   onFieldMappingConfigured?: () => void;
 }
@@ -25,9 +27,9 @@ export default function ConnectorCard({
   onConnect,
   connectionKey,
   onFieldMappingConfigured,
-}: Readonly<ConnectorCardProps>): ReactNode {
+}: ConnectorCardProps) {
   const integrationApp = useIntegrationApp();
-  const { fieldMappingInstance, loading: fieldMappingsLoading } = useFieldMappingInstance(
+  const { fieldMappingInstance, loading: fieldMappingsLoading, error: fieldMappingError } = useFieldMappingInstance(
     connectionKey ? {
       connectionId: connectionKey,
       fieldMappingKey: 'contact-mapping',
@@ -35,9 +37,9 @@ export default function ConnectorCard({
     } : undefined
   );
 
-  console.log('fieldMappingInstance', fieldMappingInstance)
   
   const isConfigured = !!fieldMappingInstance?.id;
+  const hasFieldMappingError = !!fieldMappingError;
 
   const handleConfigure = async () => {
     if (!connectionKey) return;
@@ -95,16 +97,21 @@ export default function ConnectorCard({
           
           {connectionKey && (
             <div className="w-full">
-              {fieldMappingsLoading ? (
+              {hasFieldMappingError ? (
+                <div className="text-red-600 text-sm">
+                  Error loading field mapping configuration
+                </div>
+              ) : fieldMappingsLoading ? (
                 <div className="flex items-center justify-center py-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               ) : !isConfigured ? (
                 <Button 
                   onClick={handleConfigure} 
-                  className="mt-2 w-full"
+                  className="w-full"
                   variant="outline"
                   size="medium"
+                  disabled={fieldMappingsLoading}
                 >
                   Configure Contact Mapping
                 </Button>
@@ -118,6 +125,7 @@ export default function ConnectorCard({
                     size="small"
                     onClick={handleResetConfiguration}
                     className="w-full text-sm text-gray-600 hover:text-gray-900"
+                    disabled={fieldMappingsLoading}
                   >
                     Reconfigure
                   </Button>
