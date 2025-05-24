@@ -4,10 +4,9 @@ import { FIELD_MAPPING_KEYS } from '@/constants';
 
 interface FieldMappingStatusProps {
   connectionKey: string;
-  onFieldMappingConfigured?: () => void;
 }
 
-export default function FieldMappingStatus({ connectionKey, onFieldMappingConfigured }: Readonly<FieldMappingStatusProps>) {
+export default function FieldMappingStatus({ connectionKey }: Readonly<FieldMappingStatusProps>) {
   const integrationApp = useIntegrationApp();
   const { fieldMappingInstance, loading: fieldMappingsLoading, error: fieldMappingError } = useFieldMappingInstance({
     connectionId: connectionKey,
@@ -24,10 +23,6 @@ export default function FieldMappingStatus({ connectionKey, onFieldMappingConfig
         .connection(connectionKey)
         .fieldMapping(FIELD_MAPPING_KEYS.CONTACT)
         .openConfiguration();
-
-      if (onFieldMappingConfigured) {
-        onFieldMappingConfigured();
-      }
     } catch (error) {
       console.error('Error opening field mapping configuration:', error);
     }
@@ -75,19 +70,23 @@ export default function FieldMappingStatus({ connectionKey, onFieldMappingConfig
   }
 
   return (
-    <div className="w-full space-y-2">
-      <span className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-md inline-block">
-        Contact Mapping Configured
-      </span>
-      <Button
-        variant="text"
-        size="small"
-        onClick={handleResetConfiguration}
-        className="w-full text-sm text-gray-600 hover:text-gray-900"
-        disabled={fieldMappingsLoading}
-      >
-        Reconfigure
-      </Button>
+    <div className="w-full mt-3">
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-medium text-blue-700">
+            Custom Field Mapping
+          </span>
+          <Button
+            variant="outline"
+            size="small"
+            onClick={handleResetConfiguration}
+            className="text-xs bg-white border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1"
+            disabled={fieldMappingsLoading}
+          >
+            Configure
+          </Button>
+        </div>
+      </div>
     </div>
   );
 } 

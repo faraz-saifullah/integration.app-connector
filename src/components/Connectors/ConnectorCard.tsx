@@ -10,7 +10,6 @@ interface ConnectorCardProps {
   isLoading?: boolean;
   onConnect: () => void;
   connectionKey?: string;
-  onFieldMappingConfigured?: () => void;
 }
 
 export default function ConnectorCard({
@@ -20,7 +19,6 @@ export default function ConnectorCard({
   isConnected,
   onConnect,
   connectionKey,
-  onFieldMappingConfigured,
 }: Readonly<ConnectorCardProps>) {
   return (
     <div className="border rounded-lg p-6 flex flex-col items-center text-center bg-white">
@@ -46,7 +44,6 @@ export default function ConnectorCard({
             <div className="w-full">
               <FieldMappingStatus
                 connectionKey={connectionKey}
-                onFieldMappingConfigured={onFieldMappingConfigured}
               />
             </div>
           )}
