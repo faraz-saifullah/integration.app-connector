@@ -1,6 +1,13 @@
-'use client';
-
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 import { IntegrationProvider } from "@/providers/IntegrationProvider";
 import { ContactsProvider } from "@/contexts/ContactsContext";
 import "./globals.css";
@@ -15,29 +22,57 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// For client components, we don't need to export metadata
+export const metadata: Metadata = {
+  title: "CRM Contact Manager",
+  description: "Create and manage contacts across multiple CRMs",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <title>CRM Contact Manager</title>
-        <meta name="description" content="Create and manage contacts across multiple CRMs" />
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
-        <IntegrationProvider>
-          <ContactsProvider>
-            <main className="min-h-screen bg-gray-50">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {children}
-              </div>
-            </main>
-          </ContactsProvider>
-        </IntegrationProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
+          <IntegrationProvider>
+            <ContactsProvider>
+              <main className="min-h-screen bg-gray-50">
+                <header className="bg-white shadow-sm border-b">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex justify-between items-center">
+                      <h1 className="text-xl font-semibold text-gray-900">
+                        CRM Contact Manager
+                      </h1>
+                      <div className="flex items-center space-x-4">
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                              Sign In
+                            </button>
+                          </SignInButton>
+                          <SignUpButton mode="modal">
+                            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                              Sign Up
+                            </button>
+                          </SignUpButton>
+                        </SignedOut>
+                        <SignedIn>
+                          <UserButton afterSignOutUrl="/" />
+                        </SignedIn>
+                      </div>
+                    </div>
+                  </div>
+                </header>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  {children}
+                </div>
+              </main>
+            </ContactsProvider>
+          </IntegrationProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

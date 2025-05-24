@@ -39,4 +39,4 @@ export async function getAuthToken(): Promise<string> {
         : 'Failed to fetch authentication token'
     );
   }
-}
+} 
