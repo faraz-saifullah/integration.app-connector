@@ -2,6 +2,7 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import { IntegrationProvider } from "@/providers/IntegrationProvider";
+import { ContactsProvider } from "@/contexts/ContactsContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,11 +29,13 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <IntegrationProvider>
-          <main className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {children}
-            </div>
-          </main>
+          <ContactsProvider>
+            <main className="min-h-screen bg-gray-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {children}
+              </div>
+            </main>
+          </ContactsProvider>
         </IntegrationProvider>
       </body>
     </html>

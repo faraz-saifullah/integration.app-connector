@@ -7,6 +7,7 @@ import {
   getPaginationRowModel,
 } from '@tanstack/react-table';
 import { CONTACTS_PAGE_SIZE, TABLE_COLUMNS } from '@/constants';
+import { Loader2 } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -17,74 +18,73 @@ interface Contact {
 
 interface ContactsTableProps {
   contacts: Contact[];
+  isLoading?: boolean;
 }
 
-export function ContactsTable({ contacts }: ContactsTableProps) {
+export function ContactsTable({ contacts, isLoading = false }: ContactsTableProps) {
   const [page, setPage] = useState(0);
   const [pageSize] = useState(CONTACTS_PAGE_SIZE);
 
-  const columns = useMemo<ColumnDef<Contact>[]>(
-    () => [
-      {
-        header: '#',
-        accessorKey: TABLE_COLUMNS.ID,
-        cell: ({ row }) => <span>{row.index + 1 + (page * pageSize)}</span>,
+  const columns = useMemo<ColumnDef<Contact>[]>(() => [
+    {
+      id: TABLE_COLUMNS.ID,
+      header: () => '#',
+      accessorFn: (row) => row.id,
+      cell: ({ row }) => <span>{row.index + 1 + (page * pageSize)}</span>,
+    },
+    {
+      id: TABLE_COLUMNS.NAME,
+      header: () => 'Name',
+      accessorFn: (row) => row.name,
+      cell: ({ row }) => {
+        const name = row.original.name;
+        return name || 'Unnamed Contact';
       },
-      {
-        header: 'Name',
-        accessorKey: TABLE_COLUMNS.NAME,
-        cell: ({ getValue }) => {
-          const name = getValue() as string;
-          return name || 'Unnamed Contact';
-        },
+    },
+    {
+      id: TABLE_COLUMNS.HUBSPOT_URL,
+      header: () => 'HubSpot URL',
+      accessorFn: (row) => row.hubspotUrl,
+      cell: ({ row }) => {
+        const url = row.original.hubspotUrl;
+        return url ? (
+          <a 
+            href={url} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-600 hover:underline"
+          >
+            Open in HubSpot
+          </a>
+        ) : null;
       },
-      {
-        header: 'HubSpot URL',
-        accessorKey: TABLE_COLUMNS.HUBSPOT_URL,
-        cell: ({ getValue }) => {
-          const url = getValue() as string;
-          return url ? (
-            <a 
-              href={url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline"
-            >
-              View in HubSpot
-            </a>
-          ) : (
-            <span className="text-gray-400">-</span>
-          );
-        },
+    },
+    {
+      id: TABLE_COLUMNS.PIPEDRIVE_URL,
+      header: () => 'Pipedrive URL',
+      accessorFn: (row) => row.pipedriveUrl,
+      cell: ({ row }) => {
+        const url = row.original.pipedriveUrl;
+        return url ? (
+          <a 
+            href={url} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-600 hover:underline"
+          >
+            Open in Pipedrive
+          </a>
+        ) : null;
       },
-      {
-        header: 'Pipedrive URL',
-        accessorKey: TABLE_COLUMNS.PIPEDRIVE_URL,
-        cell: ({ getValue }) => {
-          const url = getValue() as string;
-          return url ? (
-            <a 
-              href={url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline"
-            >
-              View in Pipedrive
-            </a>
-          ) : (
-            <span className="text-gray-400">-</span>
-          );
-        },
-      },
-    ],
-    []
-  );
+    },
+  ], []);
 
   const table = useReactTable({
     data: contacts,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    pageCount: Math.ceil(contacts.length / pageSize),
     state: {
       pagination: {
         pageIndex: page,
@@ -95,108 +95,73 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
       const newState = typeof updater === 'function' ? updater({ pageIndex: page, pageSize }) : updater;
       setPage(newState.pageIndex);
     },
-    pageCount: Math.ceil(contacts.length / pageSize),
   });
 
   const rows = table.getRowModel().rows;
-
-  if (rows.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No contacts found.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
-          {table.getHeaderGroups().map((headerGroup) => (
+          {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                  {flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
               ))}
             </tr>
           ))}
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                >
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
-                </td>
-              ))}
+          {isLoading ? (
+            <tr>
+              <td colSpan={columns.length} className="text-center py-8">
+                <div className="flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                </div>
+              </td>
             </tr>
-          ))}
+          ) : (
+            rows.map(row => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map(cell => (
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-          <span className="text-sm text-gray-700">
-            | Go to page:
-            <input
-              type="number"
-              defaultValue={table.getState().pagination.pageIndex + 1}
-              onChange={(e) => {
-                const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                table.setPageIndex(page);
-              }}
-              className="border p-1 rounded w-16"
-              min="1"
-              max={table.getPageCount()}
-            />
-          </span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            className="px-2 py-1 text-sm rounded disabled:opacity-50"
-          >
-            «
-          </button>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="px-2 py-1 text-sm rounded disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="px-2 py-1 text-sm rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-          <button
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            className="px-2 py-1 text-sm rounded disabled:opacity-50"
-          >
-            »
-          </button>
+      <div className="py-3 px-6">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-700">
+            Showing {isLoading ? 0 : (page * pageSize) + 1} to {isLoading ? 0 : Math.min((page + 1) * pageSize, contacts.length)} of {contacts.length} results
+          </div>
+          <div className="flex items-center">
+            <button
+              onClick={() => table.setPageIndex(table.getState().pagination.pageIndex - 1)}
+              disabled={!table.getCanPreviousPage() || isLoading}
+              className="px-4 py-2 border border-gray-300 rounded-md mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => table.setPageIndex(table.getState().pagination.pageIndex + 1)}
+              disabled={!table.getCanNextPage() || isLoading}
+              className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
