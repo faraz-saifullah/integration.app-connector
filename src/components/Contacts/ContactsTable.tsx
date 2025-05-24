@@ -5,6 +5,7 @@ import {
   ColumnDef,
   getPaginationRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   SortingState,
   flexRender,
 } from '@tanstack/react-table';
@@ -33,6 +34,7 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
       desc: true
     },
   ]);
+  const [filter, setFilter] = useState('');
 
   const columns = useMemo<ColumnDef<Contact>[]>(() => [
     {
@@ -53,6 +55,7 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
       sortingFn: (rowA, rowB) => {
         return rowA.original.name.localeCompare(rowB.original.name);
       },
+      filterFn: 'includesString'
     },
     {
       id: TABLE_COLUMNS.HUBSPOT_URL,
@@ -116,25 +119,37 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     pageCount: Math.ceil(contacts.length / pageSize),
     state: {
       pagination: {
         pageIndex: page,
         pageSize,
       },
-      sorting
+      sorting,
+      globalFilter: filter
     },
     onPaginationChange: (updater) => {
       const newState = typeof updater === 'function' ? updater({ pageIndex: page, pageSize }) : updater;
       setPage(newState.pageIndex);
     },
-    onSortingChange: setSorting
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setFilter
   });
 
   const rows = table.getRowModel().rows;
 
   return (
     <div className="overflow-x-auto">
+      <div className="flex justify-end mb-4">
+        <input
+          type="text"
+          placeholder="Search contacts..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           {table.getHeaderGroups().map(headerGroup => (
