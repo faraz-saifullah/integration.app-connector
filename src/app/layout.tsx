@@ -1,16 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
-import { IntegrationProvider } from "@/providers/IntegrationProvider";
-import { ContactsProvider } from "@/contexts/ContactsContext";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+import { Providers } from "@/app/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,41 +28,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
-          <IntegrationProvider>
-            <ContactsProvider>
-              <main className="min-h-screen bg-gray-50">
-                <header className="bg-white shadow-sm border-b">
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex justify-between items-center">
-                      <h1 className="text-xl font-semibold text-gray-900">
-                        CRM Contact Manager
-                      </h1>
-                      <div className="flex items-center space-x-4">
-                        <SignedOut>
-                          <SignInButton mode="modal">
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                              Sign In
-                            </button>
-                          </SignInButton>
-                          <SignUpButton mode="modal">
-                            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                              Sign Up
-                            </button>
-                          </SignUpButton>
-                        </SignedOut>
-                        <SignedIn>
-                          <UserButton afterSignOutUrl="/" />
-                        </SignedIn>
-                      </div>
-                    </div>
-                  </div>
-                </header>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                  {children}
-                </div>
-              </main>
-            </ContactsProvider>
-          </IntegrationProvider>
+          <Providers>{children}</Providers>
         </body>
       </html>
     </ClerkProvider>
