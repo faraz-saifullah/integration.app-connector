@@ -1,8 +1,9 @@
 import { Button } from "@integration-app/react";
 import Image from "next/image";
-import { useIntegrationApp } from "@integration-app/react";
-import { useState, useEffect } from "react";
+import { useIntegrationApp, useFieldMappingInstance } from "@integration-app/react";
+import { useEffect } from "react";
 import { ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ConnectorCardProps {
   name: string;
@@ -26,51 +27,17 @@ export default function ConnectorCard({
   onFieldMappingConfigured,
 }: Readonly<ConnectorCardProps>): ReactNode {
   const integrationApp = useIntegrationApp();
-  const [isUsingFieldMapping, setIsUsingFieldMapping] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(false);
+  const { fieldMappingInstance, loading: fieldMappingsLoading } = useFieldMappingInstance(
+    connectionKey ? {
+      connectionId: connectionKey,
+      fieldMappingKey: 'contact-mapping',
+      autoCreate: false
+    } : undefined
+  );
 
-  useEffect(() => {
-    const checkConfiguration = async () => {
-      if (!connectionKey) return;
-      
-      try {
-        const instance = await integrationApp
-          .connection(connectionKey)
-          .fieldMapping('pronouns')
-          .get();
-        console.log(`${connectionKey} field mapping instance:`, instance);
-        setIsConfigured(!!instance);
-      } catch (error) {
-        setIsConfigured(false);
-      }
-    };
-    checkConfiguration();
-  }, [connectionKey, integrationApp]);
-
-  const handleFieldMappingToggle = async () => {
-    if (!connectionKey) return;
-
-    if (!isUsingFieldMapping) {
-      // User is enabling field mapping
-      setIsUsingFieldMapping(true);
-      setIsConfigured(false);
-    } else {
-      // User is disabling field mapping
-      try {
-        await integrationApp
-          .connection(connectionKey)
-          .fieldMapping('pronouns')
-          .archive();
-        setIsUsingFieldMapping(false);
-        setIsConfigured(false);
-        if (onFieldMappingConfigured) {
-          onFieldMappingConfigured();
-        }
-      } catch (error) {
-        console.error('Error disabling field mapping:', error);
-      }
-    }
-  };
+  console.log('fieldMappingInstance', fieldMappingInstance)
+  
+  const isConfigured = !!fieldMappingInstance?.id;
 
   const handleConfigure = async () => {
     if (!connectionKey) return;
@@ -78,9 +45,10 @@ export default function ConnectorCard({
     try {
       await integrationApp
         .connection(connectionKey)
-        .fieldMapping('pronouns')
+        .fieldMapping('contact-mapping')
         .openConfiguration();
-      setIsConfigured(true);
+      
+      // The useFieldMappings hook will automatically refetch after configuration
       if (onFieldMappingConfigured) {
         onFieldMappingConfigured();
       }
@@ -96,8 +64,10 @@ export default function ConnectorCard({
       // Open the configuration again to reset it
       await integrationApp
         .connection(connectionKey)
-        .fieldMapping('pronouns')
+        .fieldMapping('contact-mapping')
         .openConfiguration();
+      
+      // The useFieldMappings hook will automatically refetch after reconfiguration
     } catch (error) {
       console.error('Error opening field mapping configuration for reset:', error);
     }
@@ -125,24 +95,31 @@ export default function ConnectorCard({
           
           {connectionKey && (
             <div className="w-full">
-              {!isConfigured && (
-                <Button onClick={handleConfigure} className="mt-2">
-                  Configure Pronouns Field
+              {fieldMappingsLoading ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              ) : !isConfigured ? (
+                <Button 
+                  onClick={handleConfigure} 
+                  className="mt-2 w-full"
+                  variant="outline"
+                  size="medium"
+                >
+                  Configure Contact Mapping
                 </Button>
-              )}
-
-              {isConfigured && (
-                <div className="mt-2">
-                  <div className="text-green-600 mb-2">
-                    Pronouns field mapping configured 
-                  </div>
+              ) : (
+                <div className="w-full space-y-2">
+                  <span className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-md inline-block">
+                    Contact Mapping Configured
+                  </span>
                   <Button
-                    variant="secondary"
+                    variant="text"
                     size="small"
                     onClick={handleResetConfiguration}
-                    className="mt-2"
+                    className="w-full text-sm text-gray-600 hover:text-gray-900"
                   >
-                    Reset Configuration
+                    Reconfigure
                   </Button>
                 </div>
               )}
@@ -150,7 +127,7 @@ export default function ConnectorCard({
           )}
         </div>
       ) : (
-        <Button onClick={onConnect} variant="primary">
+        <Button onClick={onConnect} variant="primary" size="medium">
           Connect
         </Button>
       )}
