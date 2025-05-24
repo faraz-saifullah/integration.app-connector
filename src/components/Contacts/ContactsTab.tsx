@@ -20,8 +20,8 @@ export default function ContactsTab() {
   // Show loading state while checking connections
   if (connectionsLoading) {
     return (
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-center py-12">
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+        <div className="flex items-center">
           <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
           <span className="ml-2 text-gray-600">Checking connections...</span>
         </div>
@@ -32,7 +32,7 @@ export default function ContactsTab() {
   // Show no CRM connected state
   if (!connections || connections.length === 0) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
         <div className="text-center py-12">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
             <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -60,60 +60,62 @@ export default function ContactsTab() {
 
   // Show normal contacts view when CRMs are connected
   return (
-    <div className="space-y-6 p-6">
-      {error ? (
-        <div className="p-4 bg-red-100 text-red-700 rounded-md">
-          <p>{error}</p>
-          <button
-            onClick={refreshContacts}
-            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
-          >
-            Retry
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold">Contacts</h2>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="small"
-                onClick={refreshContacts}
-                disabled={isLoading}
-                icon={isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                ariaLabel="Refresh contacts"
-              >
-                {isLoading ? 'Refreshing...' : 'Refresh'}
-              </Button>
-              <Button
-                variant="primary"
-                size="small"
-                icon={<Plus className="h-4 w-4" />}
-                ariaLabel="Create new contact"
-                onClick={() => setIsCreateModalOpen(true)}
-              >
-                Create Contact
-              </Button>
+    <div className="h-[calc(100vh-200px)] overflow-y-auto">
+      <div className="space-y-6 p-6">
+        {error ? (
+          <div className="p-4 bg-red-100 text-red-700 rounded-md">
+            <p>{error}</p>
+            <button
+              onClick={refreshContacts}
+              className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Contacts</h2>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  size="small"
+                  onClick={refreshContacts}
+                  disabled={isLoading}
+                  icon={isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  ariaLabel="Refresh contacts"
+                >
+                  {isLoading ? 'Refreshing...' : 'Refresh'}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="small"
+                  icon={<Plus className="h-4 w-4" />}
+                  ariaLabel="Create new contact"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  Create Contact
+                </Button>
+              </div>
+            </div>
+            <div className="bg-white shadow-sm rounded-lg p-6">
+              <ContactsTable contacts={contacts} isLoading={isLoading} />
             </div>
           </div>
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <ContactsTable contacts={contacts} isLoading={isLoading} />
-          </div>
-        </div>
-      )}
-      <CreateContactForm
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => {
-          setIsCreateModalOpen(false);
-          refreshContacts();
-        }}
-      />
+        )}
+        <CreateContactForm
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={() => {
+            setIsCreateModalOpen(false);
+            refreshContacts();
+          }}
+        />
+      </div>
     </div>
   );
 }
