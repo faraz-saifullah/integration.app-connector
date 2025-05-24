@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useIntegrationApp } from '@integration-app/react';
+import { useConnections, useIntegrationApp } from '@integration-app/react';
 import { INTEGRATION_PROVIDERS, ERROR_MESSAGES, ACTION_KEYS } from '@/constants';
 
 interface ContactsContextType {
@@ -35,25 +35,28 @@ const ContactsContext = createContext<ContactsContextType | undefined>(undefined
 
 export function ContactsProvider({ children }: { children: React.ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const { connections, loading: connectionsLoading } = useConnections();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const integrationApp = useIntegrationApp();
 
   // Helper function to safely check if a connection is available
   const isConnectionAvailable = (provider: 'hubspot' | 'pipedrive'): boolean => {
-    try {
-      const connection = integrationApp.connection(provider);
-      return !!connection;
-    } catch (error) {
-      console.log(`Connection "${provider}" not available:`, error);
-      return false;
-    }
+    if (connectionsLoading) return false; // Don't make calls while connections are still loading
+    if (!connections) return false;
+    return connections.some(conn => conn.integration?.key === provider);
   };
 
   const fetchContacts = async () => {
     try {
       setError(null);
       setIsLoading(true);
+
+      // Wait for connections to load before making any decisions
+      if (connectionsLoading) {
+        console.log('Connections still loading, waiting...');
+        return;
+      }
 
       // Only fetch from connectors that are actually connected
       const fetchPromises: Promise<Contact[]>[] = [];
@@ -88,6 +91,12 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setIsLoading(true);
+
+      // Wait for connections to load before making any decisions
+      if (connectionsLoading) {
+        console.log('Connections still loading, waiting...');
+        return;
+      }
 
       // Only fetch from connectors that are actually connected
       const fetchPromises: Promise<Contact[]>[] = [];
@@ -187,8 +196,11 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    fetchContacts();
-  }, []);
+    // Only fetch contacts when connections have finished loading
+    if (!connectionsLoading) {
+      fetchContacts();
+    }
+  }, [connectionsLoading]); // Depend on connectionsLoading so it runs when loading completes
 
   return (
     <ContactsContext.Provider value={{ contacts, isLoading, error, fetchContacts, refreshContacts }}>
