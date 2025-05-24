@@ -37,7 +37,8 @@ export const TABLE_COLUMNS = {
   ID: 'id',
   NAME: 'name',
   HUBSPOT_URL: 'hubspotUrl',
-  PIPEDRIVE_URL: 'pipedriveUrl'
+  PIPEDRIVE_URL: 'pipedriveUrl',
+  UPDATED_AT: 'updatedAt'
 } as const;
 
 // CRM Options

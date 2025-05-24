@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   ColumnDef,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  flexRender,
 } from '@tanstack/react-table';
 import { CONTACTS_PAGE_SIZE, TABLE_COLUMNS } from '@/constants';
 import { Loader2 } from 'lucide-react';
@@ -14,6 +16,7 @@ interface Contact {
   name: string;
   hubspotUrl?: string;
   pipedriveUrl?: string;
+  updatedAt: string; // ISO string format
 }
 
 interface ContactsTableProps {
@@ -24,6 +27,12 @@ interface ContactsTableProps {
 export function ContactsTable({ contacts, isLoading = false }: ContactsTableProps) {
   const [page, setPage] = useState(0);
   const [pageSize] = useState(CONTACTS_PAGE_SIZE);
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: TABLE_COLUMNS.UPDATED_AT,
+      desc: true
+    },
+  ]);
 
   const columns = useMemo<ColumnDef<Contact>[]>(() => [
     {
@@ -39,6 +48,10 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
       cell: ({ row }) => {
         const name = row.original.name;
         return name || 'Unnamed Contact';
+      },
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => {
+        return rowA.original.name.localeCompare(rowB.original.name);
       },
     },
     {
@@ -58,6 +71,7 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
           </a>
         ) : null;
       },
+      enableSorting: false,
     },
     {
       id: TABLE_COLUMNS.PIPEDRIVE_URL,
@@ -76,6 +90,23 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
           </a>
         ) : null;
       },
+      enableSorting: false,
+    },
+    {
+      id: TABLE_COLUMNS.UPDATED_AT,
+      header: () => 'Updated At',
+      accessorFn: (row) => row.updatedAt,
+      cell: ({ row }) => {
+        const date = new Date(row.original.updatedAt);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Karachi'
+        });
+      },
     },
   ], []);
 
@@ -84,17 +115,20 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     pageCount: Math.ceil(contacts.length / pageSize),
     state: {
       pagination: {
         pageIndex: page,
         pageSize,
       },
+      sorting
     },
     onPaginationChange: (updater) => {
       const newState = typeof updater === 'function' ? updater({ pageIndex: page, pageSize }) : updater;
       setPage(newState.pageIndex);
     },
+    onSortingChange: setSorting
   });
 
   const rows = table.getRowModel().rows;
@@ -108,9 +142,19 @@ export function ContactsTable({ contacts, isLoading = false }: ContactsTableProp
               {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                    header.column.getCanSort() ? 'cursor-pointer hover:bg-gray-50' : ''
+                  }`}
+                  onClick={header.column.getToggleSortingHandler()}
                 >
-                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  <div className="flex items-center gap-2">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() && (
+                      <span className="text-sm">
+                        {header.column.getIsSorted() === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>

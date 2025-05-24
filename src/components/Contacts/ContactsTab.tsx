@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/Common/Button';
 import { ContactsTable } from './ContactsTable';
 import { Loader2, RefreshCw, Plus } from 'lucide-react';
 import { useContacts } from '@/contexts/ContactsContext';
+import CreateContactForm from './CreateContactForm';
 
 
 export default function ContactsTab() {
   const { contacts, isLoading, error, refreshContacts } = useContacts();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     // No need to fetch here since it's handled by the context
@@ -52,6 +54,7 @@ export default function ContactsTab() {
                 size="small"
                 icon={<Plus className="h-4 w-4" />}
                 ariaLabel="Create new contact"
+                onClick={() => setIsCreateModalOpen(true)}
               >
                 Create Contact
               </Button>
@@ -62,6 +65,14 @@ export default function ContactsTab() {
           </div>
         </div>
       )}
+      <CreateContactForm
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          setIsCreateModalOpen(false);
+          refreshContacts();
+        }}
+      />
     </div>
   );
 }

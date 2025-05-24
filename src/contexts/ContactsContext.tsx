@@ -18,6 +18,7 @@ interface Contact {
   email?: string;
   hubspotUrl?: string;
   pipedriveUrl?: string;
+  updatedAt: string; // ISO string format
 }
 
 const ContactsContext = createContext<ContactsContextType | undefined>(undefined);
@@ -88,6 +89,7 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
         name: contact.fields?.name || 'Unnamed Contact',
         email: contact.fields?.email,
         [`${provider}Url`]: contact.uri,
+        updatedAt: contact.updatedTime || null,
       })) || [];
 
       return contacts;
