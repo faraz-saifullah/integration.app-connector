@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/Common/Button';
 import { ContactsTable } from './ContactsTable';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, Plus } from 'lucide-react';
 import { useContacts } from '@/contexts/ContactsContext';
 
 
@@ -17,37 +17,47 @@ export default function ContactsTab() {
 
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 p-6">
       {error ? (
-        <div className="p-4 bg-red-100 text-red-700 rounded">
+        <div className="p-4 bg-red-100 text-red-700 rounded-md">
           <p>{error}</p>
           <button
             onClick={refreshContacts}
-            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
           >
             Retry
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium">Contacts</h2>
-            <Button
-              variant="outline"
-              size="small"
-              onClick={refreshContacts}
-              disabled={isLoading}
-              icon={isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              ariaLabel="Refresh contacts"
-            >
-              {isLoading ? 'Refreshing...' : 'Refresh'}
-            </Button>
+            <h2 className="text-2xl font-semibold">Contacts</h2>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="small"
+                onClick={refreshContacts}
+                disabled={isLoading}
+                icon={isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                ariaLabel="Refresh contacts"
+              >
+                {isLoading ? 'Refreshing...' : 'Refresh'}
+              </Button>
+              <Button
+                variant="primary"
+                size="small"
+                icon={<Plus className="h-4 w-4" />}
+                ariaLabel="Create new contact"
+              >
+                Create Contact
+              </Button>
+            </div>
           </div>
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="bg-white shadow-sm rounded-lg p-6">
             <ContactsTable contacts={contacts} isLoading={isLoading} />
           </div>
         </div>
