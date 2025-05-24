@@ -1,11 +1,20 @@
 'use client';
 
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState, FormEvent, ChangeEvent } from 'react';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import type { JSX } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/Common/Button';
-import { useIntegrationApp } from '@integration-app/react';
+import { useIntegrationApp, useConnections } from '@integration-app/react';
 import { CRM_OPTIONS, CONTACT_FORM_FIELDS } from '@/constants';
+
+interface ApiError extends Error {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 interface ContactFormData {
   [CONTACT_FORM_FIELDS.FULL_NAME]: string;
@@ -15,10 +24,15 @@ interface ContactFormData {
   [CONTACT_FORM_FIELDS.PRONOUNS]: string;
 }
 
+interface ContactCreationResult {
+  crmId: string;
+  result: unknown;
+}
+
 interface CreateContactFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (newContact: any) => void; 
+  onSuccess: (newContact: ContactCreationResult[]) => void;
 }
 
 const initialFormData: ContactFormData = {
@@ -82,6 +96,12 @@ export default function CreateContactForm({
   const [formError, setFormError] = useState<string | null>(null);
 
   const integrationApp = useIntegrationApp();
+  const { connections, loading: connectionsLoading } = useConnections();
+
+  // Get available CRMs that are actually connected
+  const availableCRMs = Object.values(CRM_OPTIONS).filter(crm => 
+    connections.some(connection => connection.integration?.key === crm.id)
+  );
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -124,7 +144,7 @@ export default function CreateContactForm({
         pronouns: formData.pronouns,
       };
 
-      const results: any[] = [];
+      const results: ContactCreationResult[] = [];
       for (const crmId of selectedCRMs) {
         try {
           const result = await integrationApp
@@ -132,7 +152,7 @@ export default function CreateContactForm({
             .action('create-contact')
             .run(payload);
           results.push({ crmId, result });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error(`Failed to create contact in ${crmId}:`, error);
         }
       }
@@ -146,110 +166,150 @@ export default function CreateContactForm({
       } else {
         throw new Error('Failed to create contact in any selected CRM');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create contact:', error);
-      setFormError(error?.response?.data?.message || error.message || 'An unexpected error occurred while creating the contact.');
+      const errorMessage = error instanceof Error
+        ? (error as ApiError)?.response?.data?.message || error.message
+        : 'An unexpected error occurred while creating the contact.';
+      setFormError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <Transition appear={true} show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
-        </Transition.Child>
+  const renderCRMSelection = () => {
+    if (connectionsLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-2 text-sm text-gray-600">Loading connected CRMs...</span>
+        </div>
+      );
+    }
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
+    if (availableCRMs.length === 0) {
+      return (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <div className="ml-3">
+              <h4 className="text-sm font-medium text-amber-800">No CRMs Connected</h4>
+              <p className="text-sm text-amber-700 mt-1">
+                You need to connect at least one CRM (HubSpot or Pipedrive) before creating contacts.
+                Go to the Connectors tab to set up your integrations first.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {availableCRMs.map((crm) => (
+          <button
+            key={crm.id}
+            onClick={() => handleCRMSelect(crm.id)}
+            className={`relative group flex items-center justify-center rounded-xl p-4 transition-all duration-200 border-2 ${selectedCRMs.includes(crm.id)
+              ? 'border-blue-500 bg-blue-50 text-blue-700'
+              : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
+              }`}
+          >
+            <div className="absolute -top-2 -right-2 p-1 bg-white rounded-full border-2 border-gray-200 shadow-sm">
+              {selectedCRMs.includes(crm.id) && (
+                <svg
+                  className="w-4 h-4 text-blue-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  Create New Contact
-                </Dialog.Title>
-                
-                <div className="mt-4 space-y-4">
-                  {/* CRM Selection Section */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Select CRMs</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.values(CRM_OPTIONS).map((crm) => (
-                        <button
-                          key={crm.id}
-                          onClick={() => handleCRMSelect(crm.id)}
-                          className={`relative group flex items-center justify-center rounded-lg p-3 transition-all duration-200 ${
-                            selectedCRMs.includes(crm.id)
-                              ? 'bg-blue-500 text-white hover:bg-blue-600'
-                              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="absolute -top-1 -right-1 p-1 bg-white rounded-full border border-gray-200">
-                            {selectedCRMs.includes(crm.id) && (
-                              <svg
-                                className="w-4 h-4 text-blue-500"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <img
-                              src={crm.icon}
-                              alt={`${crm.name} logo`}
-                              className="w-8 h-8 mb-1"
-                            />
-                            <span className="text-sm font-medium">
-                              {crm.name}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
+            <div className="flex flex-col items-center">
+              <Image
+                src={crm.icon}
+                alt={`${crm.name} logo`}
+                width={32}
+                height={32}
+                className="w-8 h-8 mb-2"
+              />
+              <span className="text-sm font-medium">
+                {crm.name}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  };
 
-                  {formError && (
-                    <div className="text-red-500 text-sm mb-2">
-                      {formError}
+  return (
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      <DialogBackdrop className="fixed inset-0 bg-black/10 backdrop-blur-sm" />
+
+      <div className="fixed inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <DialogPanel className="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white p-5 text-left align-middle shadow-2xl transition-all border border-gray-100">
+            <DialogTitle className="text-lg font-semibold leading-6 text-gray-900 mb-3 text-center">
+              Create New Contact
+            </DialogTitle>
+
+            <div className="space-y-3">
+              {/* CRM Selection Section */}
+              <div>
+                <h3 className="text-base font-medium text-gray-700 mb-4">Select CRMs</h3>
+
+                {renderCRMSelection()}
+              </div>
+
+              {formError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <p className="ml-3 text-sm text-red-700">{formError}</p>
+                  </div>
+                </div>
+              )}
+
+              {!connectionsLoading && availableCRMs.length > 0 && (
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  {/* HubSpot automation note */}
+                  {availableCRMs.some(crm => crm.id === 'hubspot') && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
+                      <div className="flex items-start">
+                        <svg className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <h4 className="text-xs font-medium text-blue-800">HubSpot Tip</h4>
+                          <p className="text-xs text-blue-700 mt-0.5">
+                            If HubSpot&apos;s automation for creating and associating companies with contacts is enabled, the system will auto-assign companies based on email domains rather than the company name you enter in this form.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {contactFieldDefinitions.map((field) => (
-                      <div key={field.name}>
+                      <div key={field.name} className={field.name === 'pronouns' ? 'md:col-span-2' : ''}>
                         <label
                           htmlFor={field.name}
-                          className="block text-sm font-medium text-gray-700"
+                          className="block text-xs font-medium text-gray-700 mb-1"
                         >
                           {field.label}
-                          {field.required && <span className="text-red-500">*</span>}
+                          {field.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        <div className="mt-1">
+                        <div>
                           {field.type === 'select' ? (
                             <select
                               id={field.name}
@@ -257,7 +317,7 @@ export default function CreateContactForm({
                               value={formData[field.name]}
                               onChange={handleChange}
                               required={field.required}
-                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 text-gray-900"
+                              className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3 text-gray-900 bg-white transition-colors duration-200"
                             >
                               {field.options?.map((option) => (
                                 <option key={option.value} value={option.value}>
@@ -274,35 +334,47 @@ export default function CreateContactForm({
                               onChange={handleChange}
                               placeholder={field.placeholder}
                               required={field.required}
-                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 text-gray-900 placeholder-gray-400"
+                              className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3 text-gray-900 placeholder-gray-400 bg-white transition-colors duration-200"
                             />
                           )}
                         </div>
                       </div>
                     ))}
-                    <div className="flex justify-end space-x-3">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Creating...' : 'Create Contact'}
-                      </Button>
-                    </div>
-                  </form>
+                  </div>
+                  <div className="flex justify-end space-x-3 pt-1">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={onClose}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Creating...' : 'Create Contact'}
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {!connectionsLoading && availableCRMs.length === 0 && (
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={onClose}
+                  >
+                    Close
+                  </Button>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
+              )}
+            </div>
+          </DialogPanel>
         </div>
-      </Dialog>
-    </Transition>
+      </div>
+    </Dialog>
   );
 }
