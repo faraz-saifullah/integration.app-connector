@@ -4,14 +4,15 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, FormEvent, ChangeEvent } from 'react';
 import type { JSX } from 'react';
 import { Button } from '@/components/Common/Button';
-import { useIntegrationApp } from '@integration-app/react'; 
+import { useIntegrationApp } from '@integration-app/react';
+import { CRM_OPTIONS, CONTACT_FORM_FIELDS } from '@/constants';
 
 interface ContactFormData {
-  fullName: string;
-  email: string;
-  phone: string;
-  companyName: string;
-  pronouns: string;
+  [CONTACT_FORM_FIELDS.FULL_NAME]: string;
+  [CONTACT_FORM_FIELDS.EMAIL]: string;
+  [CONTACT_FORM_FIELDS.PHONE]: string;
+  [CONTACT_FORM_FIELDS.COMPANY_NAME]: string;
+  [CONTACT_FORM_FIELDS.PRONOUNS]: string;
 }
 
 interface CreateContactFormProps {
@@ -19,28 +20,6 @@ interface CreateContactFormProps {
   onClose: () => void;
   onSuccess: (newContact: any) => void; 
 }
-
-interface CRMSelection {
-  id: string;
-  name: string;
-  icon: string;
-  selected: boolean;
-}
-
-const CRM_OPTIONS: CRMSelection[] = [
-  {
-    id: 'hubspot',
-    name: 'HubSpot',
-    icon: '/images/connectors/hubspot.png',
-    selected: false,
-  },
-  {
-    id: 'pipedrive',
-    name: 'Pipedrive',
-    icon: '/images/connectors/pipedrive.png',
-    selected: false,
-  },
-];
 
 const initialFormData: ContactFormData = {
   fullName: '',
@@ -214,7 +193,7 @@ export default function CreateContactForm({
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Select CRMs</h3>
                     <div className="grid grid-cols-2 gap-3">
-                      {CRM_OPTIONS.map((crm) => (
+                      {Object.values(CRM_OPTIONS).map((crm) => (
                         <button
                           key={crm.id}
                           onClick={() => handleCRMSelect(crm.id)}

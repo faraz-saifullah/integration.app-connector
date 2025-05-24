@@ -5,6 +5,7 @@ import { useIntegrationApp } from '@integration-app/react';
 import { Button } from '@/components/Common/Button';
 import { ContactsTable } from './ContactsTable';
 import { Loader2 } from 'lucide-react';
+import { INTEGRATION_PROVIDERS, ERROR_MESSAGES, URL_FIELDS, ACTION_KEYS } from '@/constants';
 
 interface Contact {
   id: string;
@@ -27,8 +28,8 @@ export default function ContactsTab() {
 
       // Fetch contacts from both HubSpot and Pipedrive in parallel
       const [hubspotContacts, pipedriveContacts] = await Promise.all([
-        fetchContactsFrom('hubspot'),
-        fetchContactsFrom('pipedrive'),
+        fetchContactsFrom(INTEGRATION_PROVIDERS.HUBSPOT),
+        fetchContactsFrom(INTEGRATION_PROVIDERS.PIPEDRIVE),
       ]);
 
       // Merge and deduplicate contacts by email
@@ -36,7 +37,7 @@ export default function ContactsTab() {
       setContacts(mergedContacts);
     } catch (err) {
       console.error('Error fetching contacts:', err);
-      setError('Failed to load contacts. Please try again later.');
+      setError(ERROR_MESSAGES.FETCH_CONTACTS);
     } finally {
       setIsLoading(false);
     }
@@ -50,21 +51,23 @@ export default function ContactsTab() {
     try {
       const connection = integrationApp.connection(provider);
       if (!connection) {
+        console.log(ERROR_MESSAGES.NO_CONNECTION + provider);
         return [];
       }
       
-      const response = await connection.action('list-contacts').run({}) as { output?: { records: any[] } };
+      console.log(`Fetching ${provider} contacts...`);
+      const response = await connection.action(ACTION_KEYS.LIST_CONTACTS).run({}) as { output?: { records: any[] } };
       
       const contacts = response?.output?.records?.map((contact: any) => ({
         id: contact.id,
         name: contact.fields?.name || 'Unnamed Contact',
         email: contact.fields?.email,
-        [`${provider}Url`]: contact.uri,
+        [URL_FIELDS[provider as keyof typeof URL_FIELDS]]: contact.uri,
       })) || [];
       
       return contacts;
     } catch (error) {
-      console.error(`Error fetching ${provider} contacts:`, error);
+      console.error(ERROR_MESSAGES.FETCH_ERROR + provider, error);
       return [];
     }
   };

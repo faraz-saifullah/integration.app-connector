@@ -1,12 +1,8 @@
 import { Button } from "@integration-app/react";
 import Image from "next/image";
 import { useIntegrationApp, useFieldMappingInstance } from "@integration-app/react";
-import { useEffect } from "react";
-import { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
-
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'text';
-type ButtonSize = 'small' | 'medium' | 'large';
+import { FIELD_MAPPING_KEYS } from '@/constants';
 
 interface ConnectorCardProps {
   name: string;
@@ -32,7 +28,7 @@ export default function ConnectorCard({
   const { fieldMappingInstance, loading: fieldMappingsLoading, error: fieldMappingError } = useFieldMappingInstance(
     connectionKey ? {
       connectionId: connectionKey,
-      fieldMappingKey: 'contact-mapping',
+      fieldMappingKey: FIELD_MAPPING_KEYS.CONTACT,
       autoCreate: false
     } : undefined
   );
