@@ -7,33 +7,18 @@ import {
   ERROR_MESSAGES,
   ACTION_KEYS,
 } from "@/constants";
-
-interface ContactsContextType {
-  contacts: Contact[];
-  isLoading: boolean;
-  error: string | null;
-  fetchContacts: () => Promise<void>;
-  refreshContacts: () => Promise<void>;
-}
-
-interface Contact {
-  id: string;
-  name: string;
-  email?: string;
-  hubspotUrl?: string;
-  pipedriveUrl?: string;
-  updatedAt: string; // ISO string format
-}
-
-interface ContactRecord {
-  id: string;
-  fields?: {
-    name?: string;
-    email?: string;
-  };
-  uri?: string;
-  updatedTime?: string;
-}
+import {
+  Contact,
+  ContactRecord,
+  ContactsContextType,
+  IntegrationProvider,
+} from "@/types";
+import {
+  transformContactRecord,
+  mergeContacts,
+  areContactsEqual,
+} from "@/utils/contact-utils";
+import { isConnectionAvailable } from "@/utils/integration-utils";
 
 const ContactsContext = createContext<ContactsContextType | undefined>(
   undefined
@@ -45,15 +30,6 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const integrationApp = useIntegrationApp();
-
-  // Helper function to safely check if a connection is available
-  const isConnectionAvailable = (
-    provider: "hubspot" | "pipedrive"
-  ): boolean => {
-    if (connectionsLoading) return false; // Don't make calls while connections are still loading
-    if (!connections) return false;
-    return connections.some((conn) => conn.integration?.key === provider);
-  };
 
   const fetchContacts = async () => {
     try {
@@ -69,14 +45,26 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
       // Only fetch from connectors that are actually connected
       const fetchPromises: Promise<Contact[]>[] = [];
 
-      if (isConnectionAvailable(INTEGRATION_PROVIDERS.HUBSPOT)) {
+      if (
+        isConnectionAvailable(
+          INTEGRATION_PROVIDERS.HUBSPOT,
+          connections,
+          connectionsLoading
+        )
+      ) {
         fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.HUBSPOT));
       } else {
         console.log("HubSpot connection not available, skipping...");
         fetchPromises.push(Promise.resolve([]));
       }
 
-      if (isConnectionAvailable(INTEGRATION_PROVIDERS.PIPEDRIVE)) {
+      if (
+        isConnectionAvailable(
+          INTEGRATION_PROVIDERS.PIPEDRIVE,
+          connections,
+          connectionsLoading
+        )
+      ) {
         fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.PIPEDRIVE));
       } else {
         console.log("Pipedrive connection not available, skipping...");
@@ -111,13 +99,25 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
       // Only fetch from connectors that are actually connected
       const fetchPromises: Promise<Contact[]>[] = [];
 
-      if (isConnectionAvailable(INTEGRATION_PROVIDERS.HUBSPOT)) {
+      if (
+        isConnectionAvailable(
+          INTEGRATION_PROVIDERS.HUBSPOT,
+          connections,
+          connectionsLoading
+        )
+      ) {
         fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.HUBSPOT));
       } else {
         fetchPromises.push(Promise.resolve([]));
       }
 
-      if (isConnectionAvailable(INTEGRATION_PROVIDERS.PIPEDRIVE)) {
+      if (
+        isConnectionAvailable(
+          INTEGRATION_PROVIDERS.PIPEDRIVE,
+          connections,
+          connectionsLoading
+        )
+      ) {
         fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.PIPEDRIVE));
       } else {
         fetchPromises.push(Promise.resolve([]));
@@ -141,7 +141,7 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchContactsFrom = async (
-    provider: "hubspot" | "pipedrive"
+    provider: IntegrationProvider
   ): Promise<Contact[]> => {
     try {
       // Safely get connection with error handling
@@ -166,13 +166,9 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
         .run({})) as { output?: { records: ContactRecord[] } };
 
       const contacts =
-        response?.output?.records?.map((contact: ContactRecord) => ({
-          id: contact.id,
-          name: contact.fields?.name || "Unnamed Contact",
-          email: contact.fields?.email,
-          [`${provider}Url`]: contact.uri,
-          updatedAt: contact.updatedTime || "",
-        })) || [];
+        response?.output?.records?.map((contact: ContactRecord) =>
+          transformContactRecord(contact, provider)
+        ) || [];
 
       console.log(
         `Successfully fetched ${contacts.length} contacts from ${provider}`
@@ -191,46 +187,6 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
       }
       return [];
     }
-  };
-
-  const areContactsEqual = (
-    contacts1: Contact[],
-    contacts2: Contact[]
-  ): boolean => {
-    if (contacts1.length !== contacts2.length) return false;
-
-    return contacts1.every((contact1, index) => {
-      const contact2 = contacts2[index];
-      return (
-        contact1.id === contact2.id &&
-        contact1.name === contact2.name &&
-        contact1.email === contact2.email
-      );
-    });
-  };
-
-  const mergeContacts = (
-    contacts1: Contact[],
-    contacts2: Contact[]
-  ): Contact[] => {
-    const mergedContacts = [...contacts1];
-
-    contacts2.forEach((contact2) => {
-      const existingContact = mergedContacts.find(
-        (c) => c.email === contact2.email
-      );
-      if (existingContact) {
-        // Update URLs if they exist in both
-        if (contact2.hubspotUrl)
-          existingContact.hubspotUrl = contact2.hubspotUrl;
-        if (contact2.pipedriveUrl)
-          existingContact.pipedriveUrl = contact2.pipedriveUrl;
-      } else {
-        mergedContacts.push(contact2);
-      }
-    });
-
-    return mergedContacts;
   };
 
   useEffect(() => {

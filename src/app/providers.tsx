@@ -10,6 +10,7 @@ import {
 } from "@clerk/nextjs";
 import { IntegrationProvider } from "@/providers/IntegrationProvider";
 import { ContactsProvider } from "@/contexts/ContactsContext";
+import { LoadingSpinner } from "@/components/Common/LoadingSpinner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
@@ -17,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

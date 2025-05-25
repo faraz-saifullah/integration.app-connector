@@ -10,92 +10,31 @@ import { useState, FormEvent, ChangeEvent } from "react";
 import type { JSX } from "react";
 import Image from "next/image";
 import { Button } from "@/components/Common/Button";
+import { LoadingSpinner } from "@/components/Common/LoadingSpinner";
 import { useIntegrationApp, useConnections } from "@integration-app/react";
-import { CRM_OPTIONS, CONTACT_FORM_FIELDS } from "@/constants";
-
-interface ApiError extends Error {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-}
-
-interface ContactFormData {
-  [CONTACT_FORM_FIELDS.FULL_NAME]: string;
-  [CONTACT_FORM_FIELDS.EMAIL]: string;
-  [CONTACT_FORM_FIELDS.PHONE]: string;
-  [CONTACT_FORM_FIELDS.COMPANY_NAME]: string;
-  [CONTACT_FORM_FIELDS.PRONOUNS]: string;
-}
-
-interface ContactCreationResult {
-  crmId: string;
-  result: unknown;
-}
-
-interface CreateContactFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: (newContact: ContactCreationResult[]) => void;
-}
-
-const initialFormData: ContactFormData = {
-  fullName: "",
-  email: "",
-  phone: "",
-  companyName: "",
-  pronouns: "",
-};
-
-const contactFieldDefinitions = [
-  {
-    name: "fullName" as keyof ContactFormData,
-    label: "Full Name",
-    type: "text",
-    required: true,
-    placeholder: "e.g., Jane Doe",
-  },
-  {
-    name: "email" as keyof ContactFormData,
-    label: "Email",
-    type: "email",
-    required: true,
-    placeholder: "e.g., jane.doe@example.com",
-  },
-  {
-    name: "phone" as keyof ContactFormData,
-    label: "Phone",
-    type: "tel",
-    placeholder: "e.g., (555) 123-4567",
-  },
-  {
-    name: "companyName" as keyof ContactFormData,
-    label: "Company Name",
-    type: "text",
-    placeholder: "e.g., Acme Corp",
-  },
-  {
-    name: "pronouns" as keyof ContactFormData,
-    label: "Pronouns",
-    type: "select",
-    options: [
-      { label: "Select Pronouns", value: "" },
-      { label: "He/Him", value: "he_him" },
-      { label: "She/Her", value: "she_her" },
-      { label: "They/Them", value: "they_them" },
-      { label: "Other", value: "other" },
-      { label: "Prefer not to say", value: "prefer_not_to_say" },
-    ],
-  },
-];
+import { CRM_OPTIONS } from "@/constants";
+import {
+  ContactFormData,
+  ContactCreationResult,
+  CreateContactFormProps,
+  ApiError,
+} from "@/types";
+import {
+  CONTACT_FORM_FIELD_DEFINITIONS,
+  INITIAL_CONTACT_FORM_DATA,
+} from "@/config/form-fields";
+import {
+  getAvailableCRMs,
+  transformFormDataToPayload,
+} from "@/utils/integration-utils";
+import { UI_MESSAGES, FORM_LABELS, LOADING_MESSAGES } from "@/constants/ui";
 
 export default function CreateContactForm({
   isOpen,
   onClose,
   onSuccess,
 }: CreateContactFormProps): JSX.Element {
-  const [formData, setFormData] = useState<ContactFormData>(initialFormData);
+  const [formData, setFormData] = useState<ContactFormData>(INITIAL_CONTACT_FORM_DATA);
   const [selectedCRMs, setSelectedCRMs] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -104,9 +43,7 @@ export default function CreateContactForm({
   const { connections, loading: connectionsLoading } = useConnections();
 
   // Get available CRMs that are actually connected
-  const availableCRMs = Object.values(CRM_OPTIONS).filter((crm) =>
-    connections.some((connection) => connection.integration?.key === crm.id)
-  );
+  const availableCRMs = getAvailableCRMs(connections, CRM_OPTIONS);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -143,15 +80,9 @@ export default function CreateContactForm({
     }
 
     try {
-      const payload = {
-        name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        company: formData.companyName,
-        pronouns: formData.pronouns,
-      };
-
+      const payload = transformFormDataToPayload(formData);
       const results: ContactCreationResult[] = [];
+
       for (const crmId of selectedCRMs) {
         try {
           const result = await integrationApp
@@ -167,7 +98,7 @@ export default function CreateContactForm({
       if (results.length > 0) {
         console.log("Contact creation successful in selected CRMs:", results);
         onSuccess(results);
-        setFormData(initialFormData);
+        setFormData(INITIAL_CONTACT_FORM_DATA);
         setSelectedCRMs([]);
         onClose();
       } else {
@@ -188,41 +119,38 @@ export default function CreateContactForm({
   const renderCRMSelection = () => {
     if (connectionsLoading) {
       return (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="ml-2 text-sm text-gray-600">
-            Loading connected CRMs...
-          </span>
-        </div>
+        <LoadingSpinner
+          size="md"
+          text={LOADING_MESSAGES.CONNECTIONS}
+          className="py-8"
+        />
       );
     }
 
     if (availableCRMs.length === 0) {
       return (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center">
+        <div className="text-center py-8">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
             <svg
-              className="h-5 w-5 text-amber-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
+              className="h-6 w-6 text-yellow-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
               <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
-            <div className="ml-3">
-              <h4 className="text-sm font-medium text-amber-800">
-                No CRMs Connected
-              </h4>
-              <p className="text-sm text-amber-700 mt-1">
-                You need to connect at least one CRM (HubSpot or Pipedrive)
-                before creating contacts. Go to the Connectors tab to set up
-                your integrations first.
-              </p>
-            </div>
           </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            {UI_MESSAGES.NO_CRMS_CONNECTED}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {UI_MESSAGES.NO_CRMS_DESCRIPTION}
+          </p>
         </div>
       );
     }
@@ -269,6 +197,110 @@ export default function CreateContactForm({
     );
   };
 
+  const renderFormFields = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {CONTACT_FORM_FIELD_DEFINITIONS.map((field) => (
+        <div
+          key={field.name}
+          className={field.name === "pronouns" ? "md:col-span-2" : ""}
+        >
+          <label
+            htmlFor={field.name}
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            {field.label}
+            {field.required && (
+              <span className="text-red-500 ml-1">*</span>
+            )}
+          </label>
+          <div>
+            {field.type === "select" ? (
+              <select
+                id={field.name}
+                name={field.name}
+                value={formData[field.name]}
+                onChange={handleChange}
+                required={field.required}
+                className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3 text-gray-900 bg-white transition-colors duration-200"
+              >
+                {field.options?.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type}
+                id={field.name}
+                name={field.name}
+                value={formData[field.name]}
+                onChange={handleChange}
+                placeholder={field.placeholder}
+                required={field.required}
+                className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3 text-gray-900 placeholder-gray-400 bg-white transition-colors duration-200"
+              />
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderHubSpotTip = () => {
+    if (!availableCRMs.some((crm) => crm.id === "hubspot")) return null;
+
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
+        <div className="flex items-start">
+          <svg
+            className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <div>
+            <h4 className="text-xs font-medium text-blue-800">HubSpot Tip</h4>
+            <p className="text-xs text-blue-700 mt-0.5">
+              If HubSpot&apos;s automation for creating and associating
+              companies with contacts is enabled, the system will auto-assign
+              companies based on email domains rather than the company name you
+              enter in this form.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderErrorMessage = () => {
+    if (!formError) return null;
+
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="flex items-center">
+          <svg
+            className="h-5 w-5 text-red-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <p className="ml-3 text-sm text-red-700">{formError}</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <DialogBackdrop className="fixed inset-0 bg-black/10 backdrop-blur-sm" />
@@ -284,113 +316,18 @@ export default function CreateContactForm({
               {/* CRM Selection Section */}
               <div>
                 <h3 className="text-base font-medium text-gray-700 mb-4">
-                  Select CRMs
+                  {FORM_LABELS.SELECT_CRMS}
                 </h3>
-
                 {renderCRMSelection()}
               </div>
 
-              {formError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg
-                      className="h-5 w-5 text-red-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <p className="ml-3 text-sm text-red-700">{formError}</p>
-                  </div>
-                </div>
-              )}
+              {renderErrorMessage()}
 
               {!connectionsLoading && availableCRMs.length > 0 && (
                 <form onSubmit={handleSubmit} className="space-y-3">
-                  {/* HubSpot automation note */}
-                  {availableCRMs.some((crm) => crm.id === "hubspot") && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
-                      <div className="flex items-start">
-                        <svg
-                          className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <div>
-                          <h4 className="text-xs font-medium text-blue-800">
-                            HubSpot Tip
-                          </h4>
-                          <p className="text-xs text-blue-700 mt-0.5">
-                            If HubSpot&apos;s automation for creating and
-                            associating companies with contacts is enabled, the
-                            system will auto-assign companies based on email
-                            domains rather than the company name you enter in
-                            this form.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {renderHubSpotTip()}
+                  {renderFormFields()}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {contactFieldDefinitions.map((field) => (
-                      <div
-                        key={field.name}
-                        className={
-                          field.name === "pronouns" ? "md:col-span-2" : ""
-                        }
-                      >
-                        <label
-                          htmlFor={field.name}
-                          className="block text-xs font-medium text-gray-700 mb-1"
-                        >
-                          {field.label}
-                          {field.required && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                        <div>
-                          {field.type === "select" ? (
-                            <select
-                              id={field.name}
-                              name={field.name}
-                              value={formData[field.name]}
-                              onChange={handleChange}
-                              required={field.required}
-                              className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3 text-gray-900 bg-white transition-colors duration-200"
-                            >
-                              {field.options?.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input
-                              type={field.type}
-                              id={field.name}
-                              name={field.name}
-                              value={formData[field.name]}
-                              onChange={handleChange}
-                              placeholder={field.placeholder}
-                              required={field.required}
-                              className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3 text-gray-900 placeholder-gray-400 bg-white transition-colors duration-200"
-                            />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                   <div className="flex justify-end space-x-3 pt-1">
                     <Button
                       type="button"
@@ -398,10 +335,10 @@ export default function CreateContactForm({
                       onClick={onClose}
                       disabled={isSubmitting}
                     >
-                      Cancel
+                      {FORM_LABELS.CANCEL}
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Creating..." : "Create Contact"}
+                      {isSubmitting ? FORM_LABELS.CREATING : FORM_LABELS.CREATE_CONTACT}
                     </Button>
                   </div>
                 </form>
@@ -410,7 +347,7 @@ export default function CreateContactForm({
               {!connectionsLoading && availableCRMs.length === 0 && (
                 <div className="flex justify-end pt-1">
                   <Button type="button" variant="secondary" onClick={onClose}>
-                    Close
+                    {FORM_LABELS.CLOSE}
                   </Button>
                 </div>
               )}

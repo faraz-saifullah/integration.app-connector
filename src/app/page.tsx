@@ -6,6 +6,7 @@ import { Tabs, Tab } from "@/components/Common/Tabs";
 import UserInfoTab from "@/components/User/UserInfoTab";
 import ContactsTab from "@/components/Contacts/ContactsTab";
 import ConnectorsTab from "@/components/Connectors/ConnectorsTab";
+import { UI_MESSAGES, TAB_LABELS } from "@/constants/ui";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState(0);
@@ -21,15 +22,14 @@ export default function Home() {
         <SignedOut>
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Welcome!
+              {UI_MESSAGES.WELCOME_TITLE}
             </h2>
             <p className="text-gray-600 mb-6">
-              Please sign in to access your integration dashboard and manage
-              your connections.
+              {UI_MESSAGES.WELCOME_DESCRIPTION}
             </p>
             <SignInButton mode="modal">
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-base font-medium">
-                Get Started
+                {UI_MESSAGES.GET_STARTED}
               </button>
             </SignInButton>
           </div>
@@ -38,13 +38,13 @@ export default function Home() {
         <SignedIn>
           <div className="bg-white rounded-lg shadow overflow-hidden flex-1 mb-4">
             <Tabs defaultActiveTab={activeTab} onTabChange={handleTabChange}>
-              <Tab label="User Information">
+              <Tab label={TAB_LABELS.USER_INFORMATION}>
                 <UserInfoTab />
               </Tab>
-              <Tab label="Contacts">
+              <Tab label={TAB_LABELS.CONTACTS}>
                 <ContactsTab />
               </Tab>
-              <Tab label="Connectors">
+              <Tab label={TAB_LABELS.CONNECTORS}>
                 <ConnectorsTab />
               </Tab>
             </Tabs>

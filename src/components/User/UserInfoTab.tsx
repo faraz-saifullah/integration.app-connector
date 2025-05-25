@@ -1,6 +1,8 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { LoadingSpinner } from "@/components/Common/LoadingSpinner";
+import { UI_MESSAGES, TAB_LABELS } from "@/constants/ui";
 
 export default function UserInfoTab() {
   const { user, isLoaded } = useUser();
@@ -8,7 +10,7 @@ export default function UserInfoTab() {
   if (!isLoaded) {
     return (
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -18,9 +20,9 @@ export default function UserInfoTab() {
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900">
-            No user information available
+            {UI_MESSAGES.NO_USER_INFO}
           </h3>
-          <p className="text-gray-600">Please try refreshing the page.</p>
+          <p className="text-gray-600">{UI_MESSAGES.NO_USER_INFO_DESCRIPTION}</p>
         </div>
       </div>
     );
@@ -29,7 +31,7 @@ export default function UserInfoTab() {
   return (
     <div className="h-[calc(100vh-200px)] overflow-y-auto">
       <div className="space-y-6 p-6">
-        <h2 className="text-xl font-semibold mb-6">User Information</h2>
+        <h2 className="text-xl font-semibold mb-6">{TAB_LABELS.USER_INFORMATION}</h2>
 
         <div className="space-y-4">
           {/* Name */}
