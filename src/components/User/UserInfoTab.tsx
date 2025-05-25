@@ -17,7 +17,9 @@ export default function UserInfoTab() {
     return (
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900">No user information available</h3>
+          <h3 className="text-lg font-medium text-gray-900">
+            No user information available
+          </h3>
           <p className="text-gray-600">Please try refreshing the page.</p>
         </div>
       </div>

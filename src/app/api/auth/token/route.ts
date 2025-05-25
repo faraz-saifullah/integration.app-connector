@@ -17,10 +17,7 @@ export async function GET() {
     // Get the current user information from Clerk
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const workspaceKey = process.env.NEXT_PUBLIC_WORKSPACE_KEY;
@@ -35,8 +32,11 @@ export async function GET() {
     }
 
     // Use real user information from Clerk
-    const userFullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
-    const userEmail = user.emailAddresses?.[0]?.emailAddress || '';
+    const userFullName =
+      user.fullName ||
+      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+      "Unknown User";
+    const userEmail = user.emailAddresses?.[0]?.emailAddress || "";
 
     // Create the token payload with real user data
     const payload = {

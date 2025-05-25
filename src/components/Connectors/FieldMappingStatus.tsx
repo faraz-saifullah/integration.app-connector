@@ -1,17 +1,27 @@
-import { useIntegrationApp, useFieldMappingInstance, Button } from "@integration-app/react";
+import {
+  useIntegrationApp,
+  useFieldMappingInstance,
+  Button,
+} from "@integration-app/react";
 import { Loader2 } from "lucide-react";
-import { FIELD_MAPPING_KEYS } from '@/constants';
+import { FIELD_MAPPING_KEYS } from "@/constants";
 
 interface FieldMappingStatusProps {
   connectionKey: string;
 }
 
-export default function FieldMappingStatus({ connectionKey }: Readonly<FieldMappingStatusProps>) {
+export default function FieldMappingStatus({
+  connectionKey,
+}: Readonly<FieldMappingStatusProps>) {
   const integrationApp = useIntegrationApp();
-  const { fieldMappingInstance, loading: fieldMappingsLoading, error: fieldMappingError } = useFieldMappingInstance({
+  const {
+    fieldMappingInstance,
+    loading: fieldMappingsLoading,
+    error: fieldMappingError,
+  } = useFieldMappingInstance({
     connectionId: connectionKey,
     fieldMappingKey: FIELD_MAPPING_KEYS.CONTACT,
-    autoCreate: false
+    autoCreate: false,
   });
 
   const isConfigured = !!fieldMappingInstance?.id;
@@ -24,7 +34,7 @@ export default function FieldMappingStatus({ connectionKey }: Readonly<FieldMapp
         .fieldMapping(FIELD_MAPPING_KEYS.CONTACT)
         .openConfiguration();
     } catch (error) {
-      console.error('Error opening field mapping configuration:', error);
+      console.error("Error opening field mapping configuration:", error);
     }
   };
 
@@ -35,7 +45,10 @@ export default function FieldMappingStatus({ connectionKey }: Readonly<FieldMapp
         .fieldMapping(FIELD_MAPPING_KEYS.CONTACT)
         .openConfiguration();
     } catch (error) {
-      console.error('Error opening field mapping configuration for reset:', error);
+      console.error(
+        "Error opening field mapping configuration for reset:",
+        error
+      );
     }
   };
 
@@ -89,4 +102,4 @@ export default function FieldMappingStatus({ connectionKey }: Readonly<FieldMapp
       </div>
     </div>
   );
-} 
+}

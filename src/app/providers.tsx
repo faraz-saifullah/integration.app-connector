@@ -1,6 +1,13 @@
-'use client';
+"use client";
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+  useAuth,
+} from "@clerk/nextjs";
 import { IntegrationProvider } from "@/providers/IntegrationProvider";
 import { ContactsProvider } from "@/contexts/ContactsContext";
 
@@ -46,9 +53,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isSignedIn ? (
           <IntegrationProvider>
-            <ContactsProvider>
-              {children}
-            </ContactsProvider>
+            <ContactsProvider>{children}</ContactsProvider>
           </IntegrationProvider>
         ) : (
           <>{children}</>

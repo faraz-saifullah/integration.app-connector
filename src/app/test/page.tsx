@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export default function TestPage() {
   const [token, setToken] = useState<string | null>(null);
@@ -11,18 +11,18 @@ export default function TestPage() {
     async function fetchToken() {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/auth/token');
-        
+        const response = await fetch("/api/auth/token");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch token');
+          throw new Error("Failed to fetch token");
         }
-        
+
         const data = await response.json();
         setToken(data.token);
         setError(null);
       } catch (err) {
-        console.error('Error fetching token:', err);
-        setError('Failed to fetch authentication token. Please try again.');
+        console.error("Error fetching token:", err);
+        setError("Failed to fetch authentication token. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -42,7 +42,7 @@ export default function TestPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6">Token Test Page</h1>
-      
+
       {error ? (
         <div className="p-4 mb-6 text-red-700 bg-red-100 rounded-md">
           <p className="font-medium">Error:</p>
@@ -51,10 +51,12 @@ export default function TestPage() {
       ) : (
         <div className="space-y-6">
           <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-            <h2 className="text-lg font-medium text-green-800 mb-2">Success!</h2>
+              <h2 className="text-lg font-medium text-green-800 mb-2">
+                Success!
+              </h2>
             <p className="text-green-700">Token generated successfully.</p>
           </div>
-          
+
           <div className="space-y-2">
             <h2 className="text-lg font-medium">Your JWT Token:</h2>
             <div className="p-4 bg-gray-50 rounded-md overflow-x-auto">
@@ -64,11 +66,21 @@ export default function TestPage() {
               This token is valid for 1 hour.
             </p>
           </div>
-          
+
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
             <h3 className="font-medium text-blue-800 mb-2">Next Steps:</h3>
             <ul className="list-disc list-inside space-y-1 text-blue-700">
-              <li>Verify the token at <a href="https://jwt.io/" target="_blank" rel="noopener noreferrer" className="underline">jwt.io</a></li>
+                <li>
+                  Verify the token at{" "}
+                  <a
+                    href="https://jwt.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    jwt.io
+                  </a>
+                </li>
               <li>Check the token payload for user information</li>
               <li>Proceed to implement the contact form</li>
             </ul>

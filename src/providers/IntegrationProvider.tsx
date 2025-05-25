@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { IntegrationAppProvider } from '@integration-app/react';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { getAuthToken } from '@/lib/auth';
+import { IntegrationAppProvider } from "@integration-app/react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+import { getAuthToken } from "@/lib/auth";
 
 export function IntegrationProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -16,15 +16,17 @@ export function IntegrationProvider({ children }: { children: ReactNode }) {
       setError(null);
       return token;
     } catch (err) {
-      console.error('IntegrationProvider: Error fetching token:', err);
+      console.error("IntegrationProvider: Error fetching token:", err);
 
       // Provide more specific error messages
-      let errorMessage = 'Failed to get authentication token.';
+      let errorMessage = "Failed to get authentication token.";
       if (err instanceof Error) {
-        if (err.message.includes('Unauthorized')) {
-          errorMessage = 'You need to be signed in to access integrations. Please sign in and try again.';
-        } else if (err.message.includes('fetch')) {
-          errorMessage = 'Network error while fetching authentication token. Please check your connection and try again.';
+        if (err.message.includes("Unauthorized")) {
+          errorMessage =
+            "You need to be signed in to access integrations. Please sign in and try again.";
+        } else if (err.message.includes("fetch")) {
+          errorMessage =
+            "Network error while fetching authentication token. Please check your connection and try again.";
         } else {
           errorMessage = `Authentication error: ${err.message}`;
         }
@@ -55,8 +57,16 @@ export function IntegrationProvider({ children }: { children: ReactNode }) {
       <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
         <div className="flex items-start">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            <svg
+              className="h-5 w-5 text-red-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -83,7 +93,9 @@ export function IntegrationProvider({ children }: { children: ReactNode }) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-sm text-gray-600">Initializing integrations...</p>
+          <p className="mt-4 text-sm text-gray-600">
+            Initializing integrations...
+          </p>
         </div>
       </div>
     );

@@ -23,4 +23,4 @@ export async function getCurrentUser() {
 export async function isAuthenticated() {
   const { userId } = await auth();
   return !!userId;
-} 
+}

@@ -15,13 +15,19 @@ export function Tab({ children }: TabProps) {
   return <div className="p-4">{children}</div>;
 }
 
-export function Tabs({ children, defaultActiveTab = 0, onTabChange }: TabsProps) {
+export function Tabs({
+  children,
+  defaultActiveTab = 0,
+  onTabChange,
+}: TabsProps) {
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
-  const tabElements = Children.toArray(children) as React.ReactElement<TabProps>[];
+  const tabElements = Children.toArray(
+    children
+  ) as React.ReactElement<TabProps>[];
   const tabs = tabElements.map((tab, index) => ({
     ...tab,
     index,
-    isActive: index === activeTab
+    isActive: index === activeTab,
   }));
 
   const handleTabClick = (index: number) => {
@@ -51,7 +57,7 @@ export function Tabs({ children, defaultActiveTab = 0, onTabChange }: TabsProps)
         </nav>
       </div>
       <div className="mt-8">
-        {tabs.find(tab => tab.isActive)?.props.children}
+        {tabs.find((tab) => tab.isActive)?.props.children}
       </div>
     </div>
   );
