@@ -27,7 +27,7 @@ export default function FieldMappingStatus({
   const isConfigured = !!fieldMappingInstance?.id;
   const hasFieldMappingError = !!fieldMappingError;
 
-  const handleConfigure = async () => {
+  const handleFieldMappingConfiguration = async () => {
     try {
       await integrationApp
         .connection(connectionKey)
@@ -35,20 +35,6 @@ export default function FieldMappingStatus({
         .openConfiguration();
     } catch (error) {
       console.error("Error opening field mapping configuration:", error);
-    }
-  };
-
-  const handleResetConfiguration = async () => {
-    try {
-      await integrationApp
-        .connection(connectionKey)
-        .fieldMapping(FIELD_MAPPING_KEYS.CONTACT)
-        .openConfiguration();
-    } catch (error) {
-      console.error(
-        "Error opening field mapping configuration for reset:",
-        error
-      );
     }
   };
 
@@ -71,7 +57,7 @@ export default function FieldMappingStatus({
   if (!isConfigured) {
     return (
       <Button
-        onClick={handleConfigure}
+        onClick={handleFieldMappingConfiguration}
         className="w-full"
         variant="outline"
         size="medium"
@@ -92,7 +78,7 @@ export default function FieldMappingStatus({
           <Button
             variant="outline"
             size="small"
-            onClick={handleResetConfiguration}
+            onClick={handleFieldMappingConfiguration}
             className="text-xs bg-white border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1"
             disabled={fieldMappingsLoading}
           >

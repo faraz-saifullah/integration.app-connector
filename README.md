@@ -1,109 +1,213 @@
 # CRM Contact Manager
 
-This is a [Next.js](https://nextjs.org) project with [Clerk](https://clerk.com) authentication integration, bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A Next.js application that allows users to connect their CRM systems (HubSpot and Pipedrive) and create contacts through a unified interface. Built with modern React, TypeScript, and integration.app for seamless CRM connectivity.
 
-## Features
+## 🎯 Features
 
-- ✅ Next.js 15 with App Router
-- ✅ Clerk Authentication (Sign In/Sign Up/User Management)
-- ✅ TypeScript support
-- ✅ Tailwind CSS for styling
-- ✅ Integration management dashboard
-- ✅ Contact management system
+- **Multi-CRM Support**: Connect and manage contacts across HubSpot and Pipedrive
+- **Unified Contact Creation**: Single form to create contacts in multiple CRMs simultaneously
+- **Real-time Sync**: View and manage contacts from all connected CRMs in one place
+- **Field Mapping**: Configure custom field mappings for each CRM (pronouns, etc.)
+- **Secure Authentication**: Clerk-powered user authentication and session management
+- **Responsive Design**: Modern, mobile-friendly interface built with Tailwind CSS
 
-## Getting Started
+## 🚀 Quick Start
 
-### 1. Environment Setup
+### Prerequisites
 
-Create a `.env.local` file in the root directory and add your Clerk keys:
+- Node.js 18+ 
+- npm, yarn, or pnpm
+- Clerk account (for authentication)
+- Integration.app account (for CRM connections)
+
+### 1. Clone and Install
 
 ```bash
-# Get these values from https://dashboard.clerk.com/
+git clone <repository-url>
+cd integration.app-connector
+npm install
+```
+
+### 2. Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```bash
+# Clerk Authentication (Required)
+# Get these from https://dashboard.clerk.com/
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 CLERK_SECRET_KEY=sk_test_your_secret_key_here
 
-# Optional: Customize URLs
+# Integration.app Configuration (Required)
+# Get these from https://app.integration.app/
+NEXT_PUBLIC_WORKSPACE_KEY=your_workspace_key_here
+WORKSPACE_SECRET=your_workspace_secret_here
+
+# Application Configuration (Optional)
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# Clerk URL Configuration (Optional)
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 ```
 
-### 2. Install Dependencies
+### 3. Setup Instructions
 
-```bash
-npm install --force
-```
-
-Note: We use `--force` to resolve peer dependency conflicts between React 19 and some testing libraries.
-
-### 3. Run the Development Server
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-### 4. Set Up Clerk
-
+#### Clerk Setup:
 1. Go to [Clerk Dashboard](https://dashboard.clerk.com/)
 2. Create a new application
 3. Copy your publishable key and secret key
 4. Add them to your `.env.local` file
-5. Configure your sign-in and sign-up settings in the Clerk dashboard
 
-## Authentication Features
+#### Integration.app Setup:
+1. Go to [Integration.app Dashboard](https://app.integration.app/)
+2. Create a new workspace
+3. Copy your workspace key and secret
+4. Add them to your `.env.local` file
+5. Enable HubSpot and Pipedrive integrations in your workspace
 
-- **Sign In/Sign Up**: Modal-based authentication using Clerk's components
-- **User Management**: Built-in user profile management with UserButton
-- **Protected Routes**: Authentication protection on all dashboard features
-- **Server-side Auth**: Utilities for API routes and server components
-- **Client-side Auth**: Utilities for client components
+### 4. Run the Application
 
-## File Structure
-
-```
-├── src/
-│   ├── middleware.ts       # Clerk middleware for route protection
-│   ├── app/
-│   │   ├── layout.tsx      # Root layout with ClerkProvider
-│   │   ├── page.tsx        # Main dashboard with auth protection
-│   │   └── api/            # API routes
-│   ├── lib/
-│   │   ├── auth.ts         # Client-side auth utilities
-│   │   └── server-auth.ts  # Server-side auth utilities
-│   └── components/         # React components
+```bash
+npm run dev
 ```
 
-## Authentication Utilities
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-### Server-side (use in API routes and server components):
-```typescript
-import { getAuth, getCurrentUser, isAuthenticated } from '@/lib/server-auth';
+## 📱 Usage
+
+### 1. Authentication
+- Sign up or sign in using the authentication modal
+- User information is managed through Clerk
+
+### 2. Connect CRMs
+- Navigate to the "Connectors" tab
+- Click "Connect" for HubSpot or Pipedrive
+- Follow the OAuth flow to authorize the connection
+- Configure field mappings for custom fields (like pronouns)
+
+### 3. Create Contacts
+- Go to the "Contacts" tab
+- Click "Create Contact"
+- Fill out the form with:
+  - Full Name (required)
+  - Email (required)
+  - Phone
+  - Company Name
+  - Pronouns
+- Select which CRMs to create the contact in
+- Click "Create Contact"
+- View the created contact links
+
+### 4. Manage Contacts
+- View all contacts from connected CRMs
+- Search and filter contacts
+- Access direct links to contacts in their respective CRMs
+- Refresh contact data manually
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **Frontend**: Next.js 15 with App Router, React 18, TypeScript
+- **Styling**: Tailwind CSS with custom components
+- **Authentication**: Clerk
+- **CRM Integration**: Integration.app React SDK
+- **State Management**: React Context API
+- **UI Components**: Custom components with Headless UI
+
+### Project Structure
+```
+src/
+├── app/                    # Next.js App Router pages
+├── components/             # React components
+│   ├── Common/            # Reusable UI components
+│   ├── Connectors/        # CRM connection components
+│   ├── Contacts/          # Contact management components
+│   └── User/              # User profile components
+├── contexts/              # React Context providers
+├── utils/                 # Utility functions
+├── types/                 # TypeScript type definitions
+├── constants/             # Application constants
+├── config/                # Configuration files
+└── providers/             # App-level providers
 ```
 
-### Client-side (use in client components):
-```typescript
-import { getAuthToken } from '@/lib/auth';
+### Key Features Implementation
+
+#### Contact Creation Flow
+1. User selects target CRMs
+2. Form validation ensures required fields
+3. Parallel API calls to selected CRMs
+4. Success/error handling with user feedback
+5. Automatic contact list refresh
+
+#### CRM Integration
+- OAuth-based connection flow
+- Field mapping configuration
+- Real-time connection status
+- Error handling and retry logic
+
+#### Data Management
+- Unified contact interface across CRMs
+- Duplicate detection and merging
+- Optimistic UI updates
+- Efficient data fetching and caching
+
+## 🔧 Development
+
+### Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript checks
 ```
 
-## Learn More
+### Code Quality
+- TypeScript for type safety
+- ESLint for code linting
+- Prettier for code formatting
+- Modular component architecture
+- Custom hooks for reusable logic
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Clerk Documentation](https://clerk.com/docs) - learn about Clerk authentication.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Deployment
 
-## Deploy on Vercel
+### Vercel (Recommended)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy automatically on push
 
-Remember to add your Clerk environment variables to your Vercel deployment settings.
+### Environment Variables for Production
+Make sure to add all the environment variables from `.env.local` to your production environment.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Authentication Errors**
+- Verify Clerk keys are correct
+- Check that Clerk domain settings match your deployment URL
+
+**Integration Errors**
+- Ensure Integration.app workspace is properly configured
+- Verify CRM integrations are enabled in your workspace
+- Check that OAuth redirect URLs are configured correctly
+
+**Connection Issues**
+- Verify environment variables are set correctly
+- Check browser console for detailed error messages
+- Ensure CRM accounts have proper permissions
+
+## 📝 License
+
+This project is built for demonstration purposes as part of a technical assessment.
+
+## 🤝 Support
+
+For questions or issues, please refer to the documentation or create an issue in the repository.

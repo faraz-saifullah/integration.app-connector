@@ -18,7 +18,6 @@ import {
   mergeContacts,
   areContactsEqual,
 } from "@/utils/contact-utils";
-import { isConnectionAvailable } from "@/utils/integration-utils";
 
 const ContactsContext = createContext<ContactsContextType | undefined>(
   undefined
@@ -31,109 +30,35 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const integrationApp = useIntegrationApp();
 
-  const fetchContacts = async () => {
+  const loadContacts = async (shouldCheckForChanges = false) => {
     try {
       setError(null);
       setIsLoading(true);
+      console.log("loadContacts called - starting fetch...", connections);
 
-      // Wait for connections to load before making any decisions
-      if (connectionsLoading) {
-        console.log("Connections still loading, waiting...");
-        return;
-      }
-
-      // Only fetch from connectors that are actually connected
-      const fetchPromises: Promise<Contact[]>[] = [];
-
-      if (
-        isConnectionAvailable(
-          INTEGRATION_PROVIDERS.HUBSPOT,
-          connections,
-          connectionsLoading
-        )
-      ) {
-        fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.HUBSPOT));
-      } else {
-        console.log("HubSpot connection not available, skipping...");
-        fetchPromises.push(Promise.resolve([]));
-      }
-
-      if (
-        isConnectionAvailable(
-          INTEGRATION_PROVIDERS.PIPEDRIVE,
-          connections,
-          connectionsLoading
-        )
-      ) {
-        fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.PIPEDRIVE));
-      } else {
-        console.log("Pipedrive connection not available, skipping...");
-        fetchPromises.push(Promise.resolve([]));
-      }
+      // Always attempt to fetch from both providers
+      const fetchPromises: Promise<Contact[]>[] = [
+        fetchContactsFrom(INTEGRATION_PROVIDERS.HUBSPOT),
+        fetchContactsFrom(INTEGRATION_PROVIDERS.PIPEDRIVE),
+      ];
 
       const [hubspotContacts, pipedriveContacts] = await Promise.all(
         fetchPromises
       );
 
       const mergedContacts = mergeContacts(hubspotContacts, pipedriveContacts);
-      setContacts(mergedContacts);
-    } catch (err) {
-      console.error("Error fetching contacts:", err);
-      setError(ERROR_MESSAGES.FETCH_CONTACTS);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const refreshContacts = async () => {
-    try {
-      setError(null);
-      setIsLoading(true);
-
-      // Wait for connections to load before making any decisions
-      if (connectionsLoading) {
-        console.log("Connections still loading, waiting...");
-        return;
-      }
-
-      // Only fetch from connectors that are actually connected
-      const fetchPromises: Promise<Contact[]>[] = [];
-
-      if (
-        isConnectionAvailable(
-          INTEGRATION_PROVIDERS.HUBSPOT,
-          connections,
-          connectionsLoading
-        )
-      ) {
-        fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.HUBSPOT));
+      // If shouldCheckForChanges is true, only update if contacts are different
+      if (shouldCheckForChanges) {
+        if (!areContactsEqual(contacts, mergedContacts)) {
+          setContacts(mergedContacts);
+        }
       } else {
-        fetchPromises.push(Promise.resolve([]));
-      }
-
-      if (
-        isConnectionAvailable(
-          INTEGRATION_PROVIDERS.PIPEDRIVE,
-          connections,
-          connectionsLoading
-        )
-      ) {
-        fetchPromises.push(fetchContactsFrom(INTEGRATION_PROVIDERS.PIPEDRIVE));
-      } else {
-        fetchPromises.push(Promise.resolve([]));
-      }
-
-      const [hubspotContacts, pipedriveContacts] = await Promise.all(
-        fetchPromises
-      );
-      const newContacts = mergeContacts(hubspotContacts, pipedriveContacts);
-
-      // Only update contacts if they are different
-      if (!areContactsEqual(contacts, newContacts)) {
-        setContacts(newContacts);
+        // Always update contacts
+        setContacts(mergedContacts);
       }
     } catch (err) {
-      console.error("Error refreshing contacts:", err);
+      console.error("Error loading contacts:", err);
       setError(ERROR_MESSAGES.FETCH_CONTACTS);
     } finally {
       setIsLoading(false);
@@ -192,13 +117,13 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only fetch contacts when connections have finished loading
     if (!connectionsLoading) {
-      fetchContacts();
+      loadContacts();
     }
-  }, [connectionsLoading]); // Depend on connectionsLoading so it runs when loading completes
+  }, [connectionsLoading]);
 
   return (
     <ContactsContext.Provider
-      value={{ contacts, isLoading, error, fetchContacts, refreshContacts }}
+      value={{ contacts, isLoading, error, loadContacts }}
     >
       {children}
     </ContactsContext.Provider>

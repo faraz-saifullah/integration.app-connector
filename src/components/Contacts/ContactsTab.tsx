@@ -7,9 +7,10 @@ import { Loader2, RefreshCw, Plus } from "lucide-react";
 import { useContacts } from "@/contexts/ContactsContext";
 import CreateContactForm from "./CreateContactForm";
 import { useConnections } from "@integration-app/react";
+import { LoadingSpinner } from "@/components/Common/LoadingSpinner";
 
 export default function ContactsTab() {
-  const { contacts, isLoading, error, refreshContacts } = useContacts();
+  const { contacts, isLoading, error, loadContacts } = useContacts();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { connections, loading: connectionsLoading } = useConnections();
 
@@ -83,10 +84,10 @@ export default function ContactsTab() {
           <div className="p-4 bg-red-100 text-red-700 rounded-md">
             <p>{error}</p>
             <button
-              onClick={refreshContacts}
+              onClick={() => loadContacts(true)}
               className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
             >
-              Retry
+              Try Again
             </button>
           </div>
         ) : (
@@ -97,16 +98,15 @@ export default function ContactsTab() {
                 <Button
                   variant="outline"
                   size="small"
-                  onClick={refreshContacts}
+                    onClick={() => loadContacts(true)}
                   disabled={isLoading}
                     icon={
                       isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <LoadingSpinner size="sm" />
                       ) : (
                         <RefreshCw className="h-4 w-4" />
                     )
                   }
-                  ariaLabel="Refresh contacts"
                 >
                     {isLoading ? "Refreshing..." : "Refresh"}
                 </Button>
@@ -131,7 +131,7 @@ export default function ContactsTab() {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => {
             setIsCreateModalOpen(false);
-            refreshContacts();
+            loadContacts();
           }}
         />
       </div>

@@ -76,6 +76,21 @@ export function areContactsEqual(
 }
 
 /**
+ * Formats a date string for display in the contacts table
+ */
+export function formatContactDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Karachi",
+  });
+}
+
+/**
  * Validates contact form data
  */
 export function validateContactForm(data: {

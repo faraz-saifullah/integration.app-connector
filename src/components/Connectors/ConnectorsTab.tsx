@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ConnectorCard from "./ConnectorCard";
 import { useIntegrationApp, useConnections } from "@integration-app/react";
+import { useContacts } from "@/contexts/ContactsContext";
 import { Loader2 } from "lucide-react";
 
 interface Connector {
@@ -29,6 +30,7 @@ const CONNECTORS: Connector[] = [
 export default function ConnectorsTab() {
   const integrationApp = useIntegrationApp();
   const { connections, loading: connectionsLoading } = useConnections();
+  const { loadContacts } = useContacts();
   const [connectedConnectors, setConnectedConnectors] = useState<string[]>([]);
 
   // Update connected connectors when connections change
@@ -39,7 +41,7 @@ export default function ConnectorsTab() {
         .filter(Boolean) as string[];
       setConnectedConnectors(connectedIds);
     }
-  }, [connectionsLoading]);
+  }, [connectionsLoading]); // Use connectionsLoading to avoid infinite loops with connections array
 
   const handleConnect = async (connectorId: string) => {
     try {
@@ -47,10 +49,15 @@ export default function ConnectorsTab() {
       const connection = await integrationApp
         .integration(connectorId)
         .openNewConnection();
+
       // if connection was successful and we get connectorId then update state variable
       if (connection?.id) {
         setConnectedConnectors((prev) => [...prev, connectorId]);
         console.log("Connection created:", connection);
+
+        // Automatically refresh contacts when a new connection is established
+        console.log("Refreshing contacts after successful connection...");
+        loadContacts(true);
       }
     } catch (error) {
       const err = error as Error;

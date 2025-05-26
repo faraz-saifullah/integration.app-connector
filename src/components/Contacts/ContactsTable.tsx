@@ -10,20 +10,40 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { CONTACTS_PAGE_SIZE, TABLE_COLUMNS } from "@/constants";
-import { Loader2 } from "lucide-react";
-
-interface Contact {
-  id: string;
-  name: string;
-  hubspotUrl?: string;
-  pipedriveUrl?: string;
-  updatedAt: string; // ISO string format
-}
+import { Contact } from "@/types";
+import { LoadingSpinner } from "@/components/Common/LoadingSpinner";
+import { formatContactDate } from "@/utils/contact-utils";
 
 interface ContactsTableProps {
   contacts: Contact[];
   isLoading?: boolean;
 }
+
+// Utility function to create CRM URL columns
+const createCRMUrlColumn = (
+  id: string,
+  header: string,
+  urlKey: keyof Contact,
+  crmName: string
+): ColumnDef<Contact> => ({
+  id,
+  header: () => header,
+  accessorFn: (row) => row[urlKey],
+  cell: ({ row }) => {
+    const url = row.original[urlKey] as string;
+    return url ? (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline"
+      >
+        Open in {crmName}
+      </a>
+    ) : null;
+  },
+  enableSorting: false,
+});
 
 export function ContactsTable({
   contacts,
@@ -61,62 +81,26 @@ export function ContactsTable({
         },
         filterFn: "includesString",
       },
-      {
-        id: TABLE_COLUMNS.HUBSPOT_URL,
-        header: () => "HubSpot URL",
-        accessorFn: (row) => row.hubspotUrl,
-        cell: ({ row }) => {
-          const url = row.original.hubspotUrl;
-          return url ? (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Open in HubSpot
-            </a>
-          ) : null;
-        },
-        enableSorting: false,
-      },
-      {
-        id: TABLE_COLUMNS.PIPEDRIVE_URL,
-        header: () => "Pipedrive URL",
-        accessorFn: (row) => row.pipedriveUrl,
-        cell: ({ row }) => {
-          const url = row.original.pipedriveUrl;
-          return url ? (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Open in Pipedrive
-            </a>
-          ) : null;
-        },
-        enableSorting: false,
-      },
+      createCRMUrlColumn(
+        TABLE_COLUMNS.HUBSPOT_URL,
+        "HubSpot URL",
+        "hubspotUrl",
+        "HubSpot"
+      ),
+      createCRMUrlColumn(
+        TABLE_COLUMNS.PIPEDRIVE_URL,
+        "Pipedrive URL",
+        "pipedriveUrl",
+        "Pipedrive"
+      ),
       {
         id: TABLE_COLUMNS.UPDATED_AT,
         header: () => "Updated At",
         accessorFn: (row) => row.updatedAt,
-        cell: ({ row }) => {
-          const date = new Date(row.original.updatedAt);
-          return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Asia/Karachi",
-          });
-        },
+        cell: ({ row }) => formatContactDate(row.original.updatedAt),
       },
     ],
-    []
+    [page, pageSize]
   );
 
   const table = useReactTable({
@@ -194,7 +178,7 @@ export function ContactsTable({
             <tr>
               <td colSpan={columns.length} className="text-center py-8">
                 <div className="flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                  <LoadingSpinner />
                 </div>
               </td>
             </tr>

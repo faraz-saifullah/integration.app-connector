@@ -6,7 +6,7 @@ import { Tabs, Tab } from "@/components/Common/Tabs";
 import UserInfoTab from "@/components/User/UserInfoTab";
 import ContactsTab from "@/components/Contacts/ContactsTab";
 import ConnectorsTab from "@/components/Connectors/ConnectorsTab";
-import { UI_MESSAGES, TAB_LABELS } from "@/constants/ui";
+import { UI_MESSAGES, TAB_LABELS } from "@/constants";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState(0);

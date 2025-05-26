@@ -73,8 +73,7 @@ export interface ContactsContextType {
   contacts: Contact[];
   isLoading: boolean;
   error: string | null;
-  fetchContacts: () => Promise<void>;
-  refreshContacts: () => Promise<void>;
+  loadContacts: (shouldCheckForChanges?: boolean) => Promise<void>;
 }
 
 // Component Props Types
