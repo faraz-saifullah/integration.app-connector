@@ -55,7 +55,7 @@ export default function CreateContactForm({
 
   const handleCRMSelect = (crmId: string) => {
     setSelectedCRMs((prev) =>
-      prev.includes(crmId)
+      prev.includes(crmId) 
         ? prev.filter((id) => id !== crmId)
         : [...prev, crmId]
     );

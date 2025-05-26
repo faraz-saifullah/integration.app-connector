@@ -15,9 +15,13 @@ export function LoadingSpinner({
   text,
   className = ''
 }: LoadingSpinnerProps) {
+  const ariaLabel = text || 'Loading'
+
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <div
+        role="status"
+        aria-label={ariaLabel}
         className={`animate-spin rounded-full border-t-2 border-b-2 border-blue-500 ${sizeClasses[size]}`}
       />
       {text && (
