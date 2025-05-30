@@ -1,22 +1,98 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/Common/Button";
 import { ContactsTable } from "./ContactsTable";
-import { Loader2, RefreshCw, Plus } from "lucide-react";
+import { Loader2, RefreshCw, Plus, Upload } from "lucide-react";
 import { useContacts } from "@/contexts/ContactsContext";
 import CreateContactForm from "./CreateContactForm";
-import { useConnections } from "@integration-app/react";
+import { BulkUploadStatusModal } from "./BulkUploadStatusModal";
+import { useConnections, useIntegrationApp } from "@integration-app/react";
 import { LoadingSpinner } from "@/components/Common/LoadingSpinner";
+import { transformFormDataToPayload } from "@/utils/integration-utils";
+import {
+  parseContactsCSV,
+  prepareContactsForTransform,
+  validateCSV,
+} from "@/utils/csv-parser";
 
 export default function ContactsTab() {
   const { contacts, isLoading, error, loadContacts } = useContacts();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isBulkUploading, setIsBulkUploading] = useState(false);
+  const [bulkUploadFlowRunId, setBulkUploadFlowRunId] = useState<string | null>(null);
+  const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { connections, loading: connectionsLoading } = useConnections();
+  const integrationApp = useIntegrationApp();
 
   useEffect(() => {
     // No need to fetch here since it's handled by the context
   }, []);
+
+  // Handle CSV file upload
+  const handleCSVUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsBulkUploading(true);
+    try {
+      const csvText = await file.text();
+
+      // Validate CSV format
+      const validation = validateCSV(csvText);
+      if (!validation.isValid) {
+        alert(`CSV validation failed:\n${validation.errors.join("\n")}`);
+        return;
+      }
+
+      // Parse CSV to contacts
+      const parsedContacts = parseContactsCSV(csvText);
+
+      if (parsedContacts.length === 0) {
+        alert(
+          "No valid contacts found in CSV. Please check that you have name and email columns."
+        );
+        return;
+      }
+
+      // Prepare contacts for transformation
+      const preparedContacts = prepareContactsForTransform(parsedContacts);
+
+      // Transform each contact using the existing function
+      const transformedContacts = preparedContacts.map(
+        transformFormDataToPayload
+      );
+
+      // Call the bulk flow
+      const result = await integrationApp
+        .connection("hubspot")
+        .flow("create-contacts-bulk")
+        .run({
+          input: {
+            contacts: transformedContacts,
+          },
+        });
+
+      console.log("Bulk import result:", result);
+
+      // Store the flow run ID and show the status modal
+      setBulkUploadFlowRunId(result.id);
+      setIsBulkUploadModalOpen(true);
+
+    } catch (error) {
+      console.error("Bulk upload error:", error);
+      alert("Failed to upload CSV. Please check the format and try again.");
+    } finally {
+      setIsBulkUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   // Show loading state while checking connections
   if (connectionsLoading) {
@@ -110,6 +186,34 @@ export default function ContactsTab() {
                 >
                     {isLoading ? "Refreshing..." : "Refresh"}
                 </Button>
+
+                  {/* CSV Bulk Upload Button */}
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isBulkUploading}
+                    icon={
+                      isBulkUploading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )
+                    }
+                    className="text-green-600 border-green-300 hover:bg-green-50"
+                  >
+                    {isBulkUploading ? "Uploading..." : "Bulk Import CSV"}
+                  </Button>
+
+                  {/* Hidden File Input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCSVUpload}
+                    className="hidden"
+                  />
+
                 <Button
                   variant="primary"
                   size="small"
@@ -132,6 +236,15 @@ export default function ContactsTab() {
           onSuccess={() => {
             setIsCreateModalOpen(false);
             loadContacts();
+          }}
+        />
+        <BulkUploadStatusModal
+          isOpen={isBulkUploadModalOpen}
+          onClose={() => setIsBulkUploadModalOpen(false)}
+          flowRunId={bulkUploadFlowRunId}
+          onComplete={() => {
+            setIsBulkUploadModalOpen(false);
+            loadContacts(true);
           }}
         />
       </div>
